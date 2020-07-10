@@ -14,12 +14,18 @@ using namespace std;
 class GeneralJob {
     public:
         int index;
-        double releasing_t;
-        double processing_t;
-        double finish_t;
-        double start_t;
-        double latest_start_t;
-        double end_t;
+        double releaseTime;
+        double processTime;
+        double deadLine;
+        double startTime;
+        double latestStartTime;
+        double endTime;
+};
+
+class GeneralJobBlock {
+    public:
+        double blockStartTime;
+        double blockEndTime;
 };
 
 class Problem {
@@ -33,8 +39,9 @@ class Problem {
 class Solution {
     public:
         double fitness;
-        vector<double> stime;
+        vector<double> jobStartTimes;
         void compute_fitness(Problem prob);
+        
 };
 
 class Population {
@@ -84,10 +91,10 @@ void Problem::load_problem(string filename, Problem &prob)
         word >> str2;
         word >> str3;
 
-        tempJob.releasing_t = atof(str1.c_str());
-        tempJob.finish_t = atof(str2.c_str());
-        tempJob.processing_t = atof(str3.c_str());
-        tempJob.latest_start_t = tempJob.finish_t - tempJob.processing_t;
+        tempJob.releaseTime = atof(str1.c_str());
+        tempJob.deadLine = atof(str2.c_str());
+        tempJob.processTime = atof(str3.c_str());
+        tempJob.latestStartTime = tempJob.deadLine - tempJob.processTime;
 
         prob.jobs.push_back(tempJob);
     }
@@ -102,11 +109,11 @@ void Population::init_population(Problem prob)
     const double EPS = 1e-6; // used to compare two double values
     for(i = 0; i < prob.POP_SIZE; i++)
     {
-        Solution tempSolution = new 
+        Solution tempSolution;
         for(j = 0; j < prob.job_num; j++)
         {
-            double tempD = rand_double(prob.jobs[j].releasing_t, prob.jobs[j].latest_start_t);
-            tempSolution.stime.push_back(tempD);
+            double tempD = rand_double(prob.jobs[j].releaseTime, prob.jobs[j].latestStartTime);
+            tempSolution.jobStartTimes.push_back(tempD);
         }
         pop.push_back(tempSolution);
 
@@ -114,6 +121,16 @@ void Population::init_population(Problem prob)
 
 
 }
+
+void Solution::compute_fitness(Problem prob) {
+    vector<GeneralJobBlock> generalBlocks;
+    vector<vector<double>> jobLists(jobStartTimes.size());
+    for (int i = 0; i < jobLists.size(); i++) {
+        jobLists[i].resize(jobStartTimes.size());
+    }
+
+}
+
 
 int main()
 {
@@ -127,7 +144,7 @@ int main()
 
     for(int i = 0; i < prob.jobs.size(); i++)
     {
-        cout << prob.jobs[i].releasing_t << " " << prob.jobs[i].finish_t << " " << prob.jobs[i].processing_t << endl;
+        cout << prob.jobs[i].releaseTime << " " << prob.jobs[i].deadLine << " " << prob.jobs[i].processTime << endl;
     }
 
     return 0;
