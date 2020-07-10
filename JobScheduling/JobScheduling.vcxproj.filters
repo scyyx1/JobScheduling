@@ -27,27 +27,30 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GA\Randomize.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GA\Population.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GA\GeneticAlgorithm.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GA\Galgo.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GA\Evolution.hpp">
+    <ClInclude Include="GA\Chromosome.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GA\Converter.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GA\Chromosome.hpp">
+    <ClInclude Include="GA\Evolution.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GA\Galgo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GA\GeneticAlgorithm.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GA\Population.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GA\Randomize.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

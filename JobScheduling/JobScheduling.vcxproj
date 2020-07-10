@@ -150,6 +150,7 @@
     <Text Include="ta05.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GA.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
