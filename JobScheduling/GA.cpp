@@ -9,7 +9,7 @@ int main()
     prob.solution_num = 10;
     
     Population currentPop;
-    int totalIteration = 1;
+    int totalIteration = 3000;
     int curIteration = 0;
     
     currentPop.init_population(prob);
@@ -26,10 +26,22 @@ int main()
         Population nextPop;
         nextPop.selection(currentPop, prob);
         nextPop.crossover(prob);
+        
         nextPop.mutation(prob, totalIteration, curIteration, currentPop);
+        if (curIteration == 671) {
+            index = 0;
+            for (int i = 0; i < prob.solution_num; i++) {
+                cout << "Fitness " << currentPop.solutions[i].fitness << endl;
+                if (currentPop.solutions[i].fitness > currentPop.solutions[index].fitness) {
+                    index = i;
+                }
+            }
+        }
         nextPop.replacement(nextPop, currentPop, prob);
+
         currentPop = nextPop;
         curIteration++;
+        cout << curIteration << endl;
     }
 
     index = 0;

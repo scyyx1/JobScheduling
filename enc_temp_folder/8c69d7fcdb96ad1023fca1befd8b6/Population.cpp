@@ -129,7 +129,15 @@ void Population::mutation(Problem prob, int totalIteration, int currentIteration
                 continue;
             }
             //this->solutions[i].jobStartTimes[j] = rand_double(prob.jobs[j].releaseTime,prob.jobs[j].latestStartTime);
-
+            if (currentIteration == 671) {
+                int index = 0;
+                for (int i = 0; i < prob.solution_num; i++) {
+                    cout << "Fitness " << this->solutions[i].fitness << endl;
+                    if (this->solutions[i].fitness > this->solutions[index].fitness) {
+                        index = i;
+                    }
+                }
+            }
             double rd = rand_double(0, 1);
             double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 5));
             double lastStartTime = lastPopulation.solutions[i].jobStartTimes[j];
