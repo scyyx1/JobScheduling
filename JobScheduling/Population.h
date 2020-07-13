@@ -32,12 +32,12 @@ class Population {
     };
 
 public:
-    vector<Solution> pop;
+    vector<Population::Solution> solutions;
     void init_population(Problem prob);
     void selection(Population& currentPop, Problem prob);
     void crossover(Problem& prob);
-    void mutation(Problem prob);
-    void replacement(Population& nextPop, Problem prob);
+    void mutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation);
+    void replacement(Population& nextPop, Population currentPop, Problem prob);
     double rand_double(double min, double max)
     {
 
