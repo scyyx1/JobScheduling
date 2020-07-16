@@ -1,4 +1,5 @@
 #include "Population.h"
+#include <GLFW/glfw3.h>
 using namespace std;
 Population::Solution bestSolution;
 double bestFitness;
@@ -14,12 +15,37 @@ void updateBestSolution(Population pop, Problem prob) {
 
 int main()
 {
+    /*
+    GLFWwindow* window;
+
+    if (!glfwInit())
+        return -1;
+
+    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+
+    glfwMakeContextCurrent(window);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glfwTerminate();
+    return 0; 
+   */
     Problem prob;
     string filename("GeneralJobList1.txt");
     prob.load_problem(filename, prob);
     prob.solution_num = 10;
     Population currentPop;
-    int totalIteration = 1000;
+    int totalIteration = 10;
     int curIteration = 0;
     
     currentPop.init_population(prob);
