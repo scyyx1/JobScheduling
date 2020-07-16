@@ -1,10 +1,11 @@
 #include "Population.h"
 #include <math.h>
 using namespace  std;
+const double EPS = 1e-6; // used to compare two double values
 void Population::init_population(Problem prob)
 {
     int i, j;
-    const double EPS = 1e-6; // used to compare two double values
+    
     for (i = 0; i < prob.solution_num; i++)
     {
         Solution *tempSolution = new Solution();
@@ -50,7 +51,7 @@ void Population::selection(Population& currentPop, Problem prob)
         float randnum = rand_01();
         for (j = 0; j < prob.solution_num; j++)
         {
-            if (randnum <= cumSlice[j])
+            if ((randnum - cumSlice[j]) < EPS)
             {
                 solutions.push_back(currentPop.solutions[j]);
                 break;
@@ -125,7 +126,7 @@ void Population::mutation(Problem prob, int totalIteration, int currentIteration
         for (int j = 0; j < prob.job_num; j++) {
             
             double needMutation = rand_double(0, 1);
-            if (needMutation < 0.2) {
+            if (needMutation + EPS < 0.5) {
                 continue;
             }
             //this->solutions[i].jobStartTimes[j] = rand_double(prob.jobs[j].releaseTime,prob.jobs[j].latestStartTime);
@@ -133,7 +134,7 @@ void Population::mutation(Problem prob, int totalIteration, int currentIteration
             double rd = rand_double(0, 1);
             double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 5));
             double lastStartTime = lastPopulation.solutions[i].jobStartTimes[j];
-            if (rd >= 0.5) {
+            if (0.5+EPS <= rd) {
                 double boundary = prob.jobs[j].latestStartTime - lastStartTime;
                 this->solutions[i].jobStartTimes[j] = boundary * threshold + lastStartTime;
             }
@@ -144,8 +145,6 @@ void Population::mutation(Problem prob, int totalIteration, int currentIteration
             this->solutions[i].compute_fitness(prob);
         }
     }
-    cout << "out" << endl;
-
 }
 
 void Population::replacement(Population& nextPop, Population currentPop, Problem prob) {
@@ -154,7 +153,7 @@ void Population::replacement(Population& nextPop, Population currentPop, Problem
     for (int i = 0; i < prob.solution_num; i++) {
         parentFitness = currentPop.solutions[i].fitness;
         childFitness = nextPop.solutions[i].fitness;
-        if (childFitness <= parentFitness) {
+        if (childFitness + EPS <= parentFitness) {
             continue;
         }
         else {
@@ -162,5 +161,44 @@ void Population::replacement(Population& nextPop, Population currentPop, Problem
         }
     }
     
+}
+
+void Population::localSearch(Problem prob) {
+    int count = 0;
+    while (count < 100) {
+        for (int i = 0; i < prob.solution_num; i++) {
+            double bestFitness = solutions[i].fitness;
+            for (int j = 0; j < prob.job_num; j++) {
+                double upperBound;
+                double lowerBound;
+                double interval = prob.jobs[j].latestStartTime - prob.jobs[j].releaseTime;
+                double range = 0.05 * interval;
+                double originJobStartTime = solutions[i].jobStartTimes[j];
+                upperBound = originJobStartTime + range;
+                lowerBound = originJobStartTime - range;
+                if (originJobStartTime - range + EPS < prob.jobs[j].releaseTime) {
+                    upperBound = prob.jobs[j].releaseTime + 2 * range;
+                    lowerBound = prob.jobs[j].releaseTime;
+                }
+                else if (originJobStartTime + range > prob.jobs[j].latestStartTime + EPS) {
+                    lowerBound = prob.jobs[j].latestStartTime - 2 * range;
+                    upperBound = prob.jobs[j].latestStartTime;
+                }
+
+                solutions[i].jobStartTimes[j] = rand_double(lowerBound, upperBound);
+                solutions[i].compute_fitness(prob);
+                double currentFitness = solutions[i].fitness;
+                if (currentFitness < bestFitness) {
+                    bestFitness = currentFitness;
+                    continue;
+                }
+                else {
+                    solutions[i].jobStartTimes[j] = originJobStartTime;
+                    solutions[i].compute_fitness(prob);
+                }
+            }
+        }
+        count++;
+    }
 }
 
