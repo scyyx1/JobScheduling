@@ -58,6 +58,9 @@ int iteration(int testIndex)
     string filename("TestFile0.txt");
     prob.load_problem(filename, prob);
     prob.solution_num = 10;
+    prob.crossover_rate = 0.8;
+    prob.mutation_rate = 0.2;
+
     Population currentPop;
     int totalIteration = 10;
     int curIteration = 0;

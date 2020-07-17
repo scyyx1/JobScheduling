@@ -101,7 +101,13 @@ void Population::Solution::compute_fitness(Problem prob) {
 }
 
 void Population::crossover(Problem& prob) {
+
     for (int i = 0; i < prob.solution_num; i ++) {
+        double needCrossover = rand_double(0, 1);
+        if (needCrossover > prob.crossover_rate + EPS) {
+            continue;
+        }
+
         if (i == prob.solution_num - 1) {
             for (int j = 0; j < prob.job_num; j++) {
                 double alpha = 0.5;
@@ -126,7 +132,7 @@ void Population::mutation(Problem prob, int totalIteration, int currentIteration
         for (int j = 0; j < prob.job_num; j++) {
             
             double needMutation = rand_double(0, 1);
-            if (needMutation + EPS < 0.5) {
+            if (needMutation > prob.mutation_rate + EPS) {
                 continue;
             }
             //this->solutions[i].jobStartTimes[j] = rand_double(prob.jobs[j].releaseTime,prob.jobs[j].latestStartTime);
