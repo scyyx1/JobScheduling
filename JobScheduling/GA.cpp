@@ -1,5 +1,9 @@
 #include "Population.h"
 #include <GLFW/glfw3.h>
+#include <chrono>
+#include <cstdint>
+#include <iostream>
+
 using namespace std;
 Population::Solution bestSolution;
 double bestFitness;
@@ -13,10 +17,15 @@ void updateBestSolution(Population pop, Problem prob) {
     }
 }
 
-int main()
+uint64_t timeSinceEpochMillisec() {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+int iteration(int testIndex)
 {
-    /*
-    GLFWwindow* window;
+
+    /*GLFWwindow* window;
 
     if (!glfwInit())
         return -1;
@@ -33,15 +42,20 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT);
+        glBegin(GL_TRIANGLES);
+        glVertex2f(-0.5f, -0.5f);
+        glVertex2f(0, 0.5f);
+        glVertex2f(0.5f, -0.5f);
+        glEnd();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     glfwTerminate();
-    return 0; 
-   */
+    return 0; */
+   
     Problem prob;
-    string filename("GeneralJobList1.txt");
+    string filename("TestFile0.txt");
     prob.load_problem(filename, prob);
     prob.solution_num = 10;
     Population currentPop;
@@ -54,13 +68,13 @@ int main()
     updateBestSolution(currentPop, prob);
     currentPop.localSearch(prob);
 
-    int index = 0;
-    for (int i = 0; i < prob.solution_num; i++) {
-        cout << "Initial Fitness " << currentPop.solutions[i].fitness << endl;
-        if (currentPop.solutions[i].fitness > currentPop.solutions[index].fitness) {
-            index = i;
-        }
-    }
+    //int index = 0;
+    //for (int i = 0; i < prob.solution_num; i++) {
+    //    cout << "Initial Fitness " << currentPop.solutions[i].fitness << endl;
+    //    if (currentPop.solutions[i].fitness > currentPop.solutions[index].fitness) {
+    //        index = i;
+    //    }
+    //}
 
     while (curIteration < totalIteration) {
         Population nextPop;
@@ -83,15 +97,15 @@ int main()
         //cout << curIteration << endl;
     }
 
-    index = 0;
-    for (int i = 0; i < prob.solution_num; i++) {
-        cout << "Fitness " << currentPop.solutions[i].fitness << endl;
-        if (currentPop.solutions[i].fitness > currentPop.solutions[index].fitness) {
-            index = i;
-        }
-    }
+    //index = 0;
+    //for (int i = 0; i < prob.solution_num; i++) {
+    //    cout << "Fitness " << currentPop.solutions[i].fitness << endl;
+    //    if (currentPop.solutions[i].fitness > currentPop.solutions[index].fitness) {
+    //        index = i;
+    //    }
+    //}
 
-    cout << "BestFitness " << bestFitness << endl;
+    cout << "TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
 
  //   for (int i = 0; i < currentPop.solutions[index].jobStartTimes.size(); i++) {
    //     Jobs* curJob = new Jobs(jobStartTimes[i], prob.jobs[i].processTime);
@@ -101,5 +115,15 @@ int main()
 
    
 
+    return 0;
+}
+
+int main() {
+    for (int i = 0; i < 10; i++) {
+        uint64_t time = timeSinceEpochMillisec();
+        iteration(i);
+        time = timeSinceEpochMillisec() - time;
+        cout << " Time spent: " << time << " miliseconds" << endl;
+    }
     return 0;
 }
