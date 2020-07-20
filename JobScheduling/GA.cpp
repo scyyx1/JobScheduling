@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include<sstream>
+#include <sstream>
 
 using namespace std;
 Population::Solution bestSolution;
@@ -194,29 +194,62 @@ int main() {
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
-    float positions[] = {
-        -0.5f, -0.5f, //0
-        0.5f, -0.5f, //1
-        0.5f, -0.49f, //2
-        -0.5f, -0.49f, //3
-       -0.2f, -0.3f, //4
-        0.2f, -0.3f, //5
-        0.2f, -0.29f, //6
-        -0.2f, -0.29f //7
-    };
+    ifstream in("TestFile0.txt");
+    int job_num = 0;
+    string line;
+    string str1, str2, str3;
+    float height = 0.8f;
+    while (getline(in, line))
+    {
+        job_num++;
+    }
+    in.clear();
+    in.seekg(0, ios::beg);
+    float* positions = new float[job_num * 8];
+    in.seekg(0, fstream::beg);
+    int position_index = 0;
+    int vertex_num = 0;
 
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0,
-        4,5,6,
-        6,7,4
+    while (getline(in, line))
+    {
+        stringstream word(line);
+        word >> str1;
+        word >> str2;
+        word >> str3;
 
-    };
+        float releaseTime = atof(str1.c_str()); 
+        float deadLine = atof(str2.c_str());
+        float processTime = atof(str3.c_str());
 
+        positions[position_index] = releaseTime/20-1.0;    
+        positions[position_index + 1] = height;            
+        positions[position_index + 2] = deadLine/20-1.0;   
+        positions[position_index + 3] = height;            
+        positions[position_index + 4] = deadLine/20-1.0;   
+        positions[position_index + 5] = height-0.01;       
+        positions[position_index + 6] = releaseTime/20-1.0;
+        positions[position_index + 7] = height-0.01;       
+        position_index += 8;
+        height -= 0.08;
+    }
+
+    unsigned int* indices = new unsigned int[job_num*6];
+    int indices_index = 0;
+    int job_index = 0;
+    while (job_index < job_num) {
+        indices[indices_index] = 0+ job_index*4;    
+        indices[indices_index+1] = 1 + job_index*4; 
+        indices[indices_index+2] = 2 + job_index*4; 
+        indices[indices_index+3] = 2 + job_index*4; 
+        indices[indices_index+4] = 3 + job_index*4; 
+        indices[indices_index+5] = 0 + job_index*4; 
+        indices_index += 6;
+        job_index++;
+    }
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 12 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 4 * job_num * 2 * sizeof(float), positions, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
@@ -224,7 +257,7 @@ int main() {
     unsigned int ibo;
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 12 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, job_num * 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
 
     ShaderProgramSource source = ParseShader("Basic.shader");
@@ -236,7 +269,7 @@ int main() {
     {
         glClear(GL_COLOR_BUFFER_BIT);
      
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, job_num * 6, GL_UNSIGNED_INT, nullptr);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
