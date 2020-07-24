@@ -25,8 +25,10 @@ class Problem {
 
 public:
     int job_num;
-    int POP_SIZE;
-    vector<GeneralJob> jobs;
+    int solution_num;
+    double mutation_rate;
+    double crossover_rate;
+    vector<Problem::GeneralJob> jobs;
     void load_problem(string filename, Problem& prob);
     
 };
