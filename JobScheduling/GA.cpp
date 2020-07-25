@@ -232,7 +232,7 @@ int draw() {
     std::sort(bestJobList.begin(), bestJobList.end(),
         [](const JobList& a, const JobList& b)
         {
-            return a.jobReleasingTime <= b.jobReleasingTime;
+            return a.jobReleasingTime < b.jobReleasingTime;
             
         }
     );
@@ -317,7 +317,7 @@ int draw() {
 }
 
 int main() {
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 2; i++) {
         uint64_t time = timeSinceEpochMillisec();
         iteration(i);
         time = timeSinceEpochMillisec() - time;
