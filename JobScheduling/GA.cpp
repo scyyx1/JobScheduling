@@ -317,7 +317,7 @@ int draw() {
 }
 
 int main() {
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 10; i++) {
         uint64_t time = timeSinceEpochMillisec();
         iteration(i);
         time = timeSinceEpochMillisec() - time;

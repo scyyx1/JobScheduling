@@ -8,6 +8,7 @@ void Problem::load_problem(string filename, Problem& prob)
     ifstream in(filename);
     string line;
     string str1, str2, str3;
+    prob.jobs.clear();
     while (getline(in, line))
     {
         stringstream word(line);
