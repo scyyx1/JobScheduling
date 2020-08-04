@@ -23,7 +23,7 @@ void Population::init_population(Problem prob)
     }
 }
 
-void Population::selection(Population& currentPop, Problem prob)
+void Population::newSelection(Population& currentPop, Problem prob)
 {
     double totalFitness = 0, cumFitness = 0;
     vector<double> slice;
@@ -100,7 +100,7 @@ void Population::Solution::compute_fitness(Problem prob) {
 
 }
 
-void Population::crossover(Problem& prob) {
+void Population::newCrossover(Problem& prob) {
 
     for (int i = 0; i < prob.solution_num; i ++) {
         double needCrossover = rand_double(0, 1);
@@ -126,7 +126,7 @@ void Population::crossover(Problem& prob) {
     }
 }
 
-void Population::mutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation) {
+void Population::newMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation) {
 
     for (int i = 0; i < prob.solution_num; i++) {
         for (int j = 0; j < prob.job_num; j++) {
@@ -153,7 +153,7 @@ void Population::mutation(Problem prob, int totalIteration, int currentIteration
     }
 }
 
-void Population::replacement(Population& nextPop, Population currentPop, Problem prob) {
+void Population::newReplacement(Population& nextPop, Population currentPop, Problem prob) {
     double parentFitness = 0;
     double childFitness = 0;
     for (int i = 0; i < prob.solution_num; i++) {
@@ -208,3 +208,82 @@ void Population::localSearch(Problem prob) {
     }
 }
 
+void Population::originalSelection(Population& currentPop, Problem prob) {
+    solutions.clear();
+    int tour_size = 5;
+    vector<Population::Solution> temp;
+    double bestfitness = 0;
+    int index = 0;
+    for (int i = 0; i < prob.solution_num; i++)
+    {
+
+        for (int j = 0; j < tour_size; j++)
+        {
+            int select = rand_int(0, prob.solution_num - 1);
+            temp.push_back(currentPop.solutions[select]);
+        }
+        bestfitness = temp[0].fitness;
+        for (int k = 1; k < tour_size; k++)
+        {
+            if (temp[k].fitness < bestfitness)
+            {
+                bestfitness = temp[k].fitness;
+                index = k;
+            }
+        }
+        solutions.push_back(temp[index]);
+        temp.clear();
+        index = 0;
+
+    }
+}
+
+void Population::originalCrossover(Problem& prob) {
+    for (int i = 0; i < prob.solution_num; i++) {
+
+        double alpha = rand_double(0, 1);
+
+        if (i == prob.solution_num - 1)
+        {
+            for (int j = 0; j < prob.job_num; j++)
+            {
+                solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[0].jobStartTimes[j];
+            }
+        }
+        else
+        {
+            for (int j = 0; j < prob.job_num - 1; j++)
+            {
+                solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[i + 1].jobStartTimes[j];
+            }
+        }
+        solutions[i].compute_fitness(prob);
+
+    }
+}
+
+void Population::originalMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation) {
+    for (int i = 0; i < prob.solution_num; i++) {
+        for (int j = 0; j < prob.job_num; j++) {
+
+            double start_time = rand_double(prob.jobs[j].releaseTime, prob.jobs[j].latestStartTime);
+            this->solutions[i].jobStartTimes[j] = start_time;
+            this->solutions[i].compute_fitness(prob);
+        }
+    }
+}
+
+void Population::originalReplacement(Population& nextPop, Population currentPop, Problem prob) {
+    double parentFitness = 0;
+    double childFitness = 0;
+    for (int i = 0; i < prob.solution_num; i++) {
+        parentFitness = currentPop.solutions[i].fitness;
+        childFitness = nextPop.solutions[i].fitness;
+        if (childFitness + EPS <= parentFitness) {
+            continue;
+        }
+        else {
+            nextPop.solutions[i] = currentPop.solutions[i];
+        }
+    }
+}

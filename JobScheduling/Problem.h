@@ -29,6 +29,6 @@ public:
     double mutation_rate;
     double crossover_rate;
     vector<Problem::GeneralJob> jobs;
-    void load_problem(string filename, Problem& prob);
-    
+    float load_problem(string filename, Problem& prob);
+
 };

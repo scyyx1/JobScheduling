@@ -25,15 +25,26 @@ public:
     }
 };
 
-Population::Solution bestSolution;
+Population::Solution bestSolutionForNewGA;
+Population::Solution bestSolutionForOriginGA;
 double bestFitness;
 Problem prob;
+float longestDeadline = 0;
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
-void updateBestSolution(Population pop, Problem prob) {
+void updateBestSolutionForNewGA(Population pop, Problem prob) {
     for (int i = 0; i < prob.solution_num; i++) {
         if (pop.solutions[i].fitness < bestFitness) {
-            bestSolution = pop.solutions[i];
+            bestSolutionForNewGA = pop.solutions[i];
+            bestFitness = pop.solutions[i].fitness;
+        }
+    }
+}
+
+void updateBestSolutionForOriginGA(Population pop, Problem prob) {
+    for (int i = 0; i < prob.solution_num; i++) {
+        if (pop.solutions[i].fitness < bestFitness) {
+            bestSolutionForOriginGA = pop.solutions[i];
             bestFitness = pop.solutions[i].fitness;
         }
     }
@@ -44,7 +55,7 @@ uint64_t timeSinceEpochMillisec() {
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
-int iteration(int testIndex)
+void newGeneticAlgorithm(int testIndex)
 {   
     string filename("TestFile0.txt");
     prob.load_problem(filename, prob);
@@ -57,28 +68,20 @@ int iteration(int testIndex)
     int curIteration = 0;
     
     currentPop.init_population(prob);
-    bestSolution = currentPop.solutions[0];
+    bestSolutionForNewGA = currentPop.solutions[0];
     bestFitness = currentPop.solutions[0].fitness;
-    updateBestSolution(currentPop, prob);
+    updateBestSolutionForNewGA(currentPop, prob);
     currentPop.localSearch(prob);
-
-    //int index = 0;
-    //for (int i = 0; i < prob.solution_num; i++) {
-    //    cout << "Initial Fitness " << currentPop.solutions[i].fitness << endl;
-    //    if (currentPop.solutions[i].fitness > currentPop.solutions[index].fitness) {
-    //        index = i;
-    //    }
-    //}
 
     while (curIteration < totalIteration) {
         Population nextPop;
-        nextPop.selection(currentPop, prob);
+        nextPop.newSelection(currentPop, prob);
         //cout << "selection done" << endl;
-        nextPop.crossover(prob);
+        nextPop.newCrossover(prob);
         //cout << "crossover done" << endl;
-        nextPop.mutation(prob, totalIteration, curIteration, currentPop);
+        nextPop.newMutation(prob, totalIteration, curIteration, currentPop);
         //cout << "mutation done" << endl;
-        nextPop.replacement(nextPop, currentPop, prob);
+        nextPop.newReplacement(nextPop, currentPop, prob);
         //cout << "replacement done" << endl;
         if (curIteration % 100 == 0) {
            nextPop.localSearch(prob);
@@ -86,103 +89,50 @@ int iteration(int testIndex)
         }
         
         currentPop = nextPop;
-        updateBestSolution(currentPop, prob);
+        updateBestSolutionForNewGA(currentPop, prob);
         curIteration++;
         //cout << curIteration << endl;
     }
 
-    //index = 0;
-    //for (int i = 0; i < prob.solution_num; i++) {
-    //    cout << "Fitness " << currentPop.solutions[i].fitness << endl;
-    //    if (currentPop.solutions[i].fitness > currentPop.solutions[index].fitness) {
-    //        index = i;
-    //    }
-    //}
-
-    cout << "TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
-
- //   for (int i = 0; i < currentPop.solutions[index].jobStartTimes.size(); i++) {
-   //     Jobs* curJob = new Jobs(jobStartTimes[i], prob.jobs[i].processTime);
-     //   jobs.push_back(*curJob);
-  //      cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
-    //}
-
-   
-
-    return 0;
+    cout << "New Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
 }
 
-/*
-struct ShaderProgramSource {
-    std::string VertexSource;
-    std::string FragmentSource;
-};
+void originalGeneticAlgorithm(int testIndex) {
+    string filename("TestFile0.txt");
+    longestDeadline = prob.load_problem(filename, prob);
+    prob.solution_num = 10;
+    prob.crossover_rate = 0.8;
+    prob.mutation_rate = 0.2;
 
-static ShaderProgramSource ParseShader(const std::string& filepath) {
-    std::ifstream stream(filepath);
+    Population currentPop;
+    int totalIteration = 10;
+    int curIteration = 0;
 
-    enum class ShaderType {
-        NONE = -1, VERTEX = 0, FRAGMENT = 1
-    };
+    currentPop.init_population(prob);
+    bestSolutionForOriginGA = currentPop.solutions[0];
+    bestFitness = currentPop.solutions[0].fitness;
+    updateBestSolutionForOriginGA(currentPop, prob);
 
-    std::string line;
-    std::stringstream ss[2];
-    ShaderType type = ShaderType::NONE;
-    while (getline(stream, line)) {
-        if (line.find("#shader") != std::string::npos) {
-            if (line.find("vertex") != std::string::npos) {
-                type = ShaderType::VERTEX;
-            }
-            else if (line.find("fragment") != std::string::npos) {
-                type = ShaderType::FRAGMENT;
-            }
-        }
-        else {
-            ss[(int)type] << line << '\n';
-        }
+ 
+    while (curIteration < totalIteration) {
+        Population nextPop;
+        nextPop.originalSelection(currentPop, prob);
+        //cout << "selection done" << endl;
+        nextPop.originalCrossover(prob);
+        //cout << "crossover done" << endl;
+        nextPop.originalMutation(prob, totalIteration, curIteration, currentPop);
+        //cout << "mutation done" << endl;
+        nextPop.originalReplacement(nextPop, currentPop, prob);
+        //cout << "replacement done" << endl;
+        currentPop = nextPop;
+        updateBestSolutionForNewGA(currentPop, prob);
+        curIteration++;
+        //cout << curIteration << endl;
     }
 
-    return { ss[0].str(), ss[1].str() };
+    cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
 }
 
-static unsigned int CompileShader(unsigned int type, const std::string& source) {
-    unsigned int id = glCreateShader(type);
-    const char* src = source.c_str();
-    glShaderSource(id, 1, &src, nullptr);
-    glCompileShader(id);
-
-    int result;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-    if (result == GL_FALSE) {
-        int length;
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        char* message = (char*)alloca(length * sizeof(char));
-        glGetShaderInfoLog(id, length, &length, message);
-        std::cout << "Fail to compile" << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") 
-         << " shader!" << std::endl;
-        std::cout << message << std::endl;
-        glDeleteShader(id);
-        return 0;
-    }
-
-    return id;
-}
-
-static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader) {
-    unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-    glValidateProgram(program);
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    return program;
-}*/
 int draw() {
     GLFWwindow* window;
 
@@ -217,14 +167,12 @@ int draw() {
     float height = 0.9 * SCREEN_HEIGHT;
 
     float segment = SCREEN_HEIGHT / (prob.job_num + 1);
-    GLfloat* lineVertices = new GLfloat[prob.job_num * 6];
-    GLfloat* redLineVertices = new GLfloat[prob.job_num * 6];
     int position_index = 0;
     int vertex_num = 0;
 
     vector<JobList> bestJobList;
-    for (int i = 0; i < bestSolution.jobStartTimes.size(); i++) {
-        JobList* curJob = new JobList(bestSolution.jobStartTimes[i], prob.jobs[i].processTime, prob.jobs[i].releaseTime, prob.jobs[i].deadLine);
+    for (int i = 0; i < bestSolutionForNewGA.jobStartTimes.size(); i++) {
+        JobList* curJob = new JobList(bestSolutionForNewGA.jobStartTimes[i], prob.jobs[i].processTime, prob.jobs[i].releaseTime, prob.jobs[i].deadLine);
         bestJobList.push_back(*curJob);
         //   cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
     }
@@ -233,9 +181,13 @@ int draw() {
         [](const JobList& a, const JobList& b)
         {
             return a.jobReleasingTime < b.jobReleasingTime;
-            
+
         }
     );
+
+    GLfloat* lineVertices = new GLfloat[prob.job_num * 6];
+    GLfloat* redLineVertices = new GLfloat[prob.job_num * 6];
+    GLfloat* rulerVertices = new GLfloat[(bestJobList[prob.job_num - 1].jobDeadline + 2) * 6];
 
     for (int i = 0; i < prob.job_num; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;
@@ -254,34 +206,32 @@ int draw() {
         redLineVertices[position_index] = bestJobList[i].startTime * 30;
         redLineVertices[position_index + 1] = height;
         redLineVertices[position_index + 2] = 0;
-        redLineVertices[position_index + 3] = (bestJobList[i].startTime + bestJobList[i].processTime)* 30;
+        redLineVertices[position_index + 3] = (bestJobList[i].startTime + bestJobList[i].processTime) * 30;
         redLineVertices[position_index + 4] = height;
         redLineVertices[position_index + 5] = 0;
         position_index += 6;
         height -= segment;
     }
-    /*
-        while (getline(in, line))
-        {
-            stringstream word(line);
-            word >> str1;
-            word >> str2;
-            word >> str3;
 
-            float releaseTime = atof(str1.c_str());
-            float deadLine = atof(str2.c_str());
-            float processTime = atof(str3.c_str());
-            lineVertices[position_index] = releaseTime * 30;
-            lineVertices[position_index + 1] = height;
-            lineVertices[position_index + 2] = 0;
-            lineVertices[position_index + 3] = deadLine*30;
-            lineVertices[position_index + 4] = height;
-            lineVertices[position_index + 5] = 0;
-            position_index += 6;
-            height -= segment;
-        }
-    */
-
+    position_index = 0;
+    height = 0.95 * SCREEN_HEIGHT;
+    int interval = 0;
+    for (int i = 0; i < ceil(longestDeadline) + 1; i++) {
+        rulerVertices[position_index] = (interval) * 30;
+        rulerVertices[position_index + 1] = height;
+        rulerVertices[position_index + 2] = 0;
+        rulerVertices[position_index + 3] = (interval) * 30;
+        rulerVertices[position_index + 4] = height + 10;
+        rulerVertices[position_index + 5] = 0;
+        position_index += 6;
+        interval += 1;
+    }
+    rulerVertices[position_index] = 0;
+    rulerVertices[position_index + 1] = height;
+    rulerVertices[position_index + 2] = 0;
+    rulerVertices[position_index + 3] = ceil(longestDeadline) * 30;
+    rulerVertices[position_index + 4] = height;
+    rulerVertices[position_index + 5] = 0;
 
 
     // Loop until the user closes the window
@@ -296,6 +246,8 @@ int draw() {
         glLineWidth(4);
         glEnableClientState(GL_VERTEX_ARRAY);
         glColor3f(1, 1, 1);
+        glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
+        glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(longestDeadline)));
         glVertexPointer(3, GL_FLOAT, 0, lineVertices);
         glDrawArrays(GL_LINES, 0, 2 * prob.job_num);
         glColor3f(1, 0, 0);
@@ -316,10 +268,12 @@ int draw() {
 
 }
 
+
 int main() {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 1; i++) {
         uint64_t time = timeSinceEpochMillisec();
-        iteration(i);
+        newGeneticAlgorithm(i);
+        originalGeneticAlgorithm(i);
         time = timeSinceEpochMillisec() - time;
         cout << " Time spent: " << time << " miliseconds" << endl;
     }

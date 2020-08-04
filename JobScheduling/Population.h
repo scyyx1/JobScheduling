@@ -35,10 +35,14 @@ public:
 public:
     vector<Population::Solution> solutions;
     void init_population(Problem prob);
-    void selection(Population& currentPop, Problem prob);
-    void crossover(Problem& prob);
-    void mutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation);
-    void replacement(Population& nextPop, Population currentPop, Problem prob);
+    void newSelection(Population& currentPop, Problem prob);
+    void newCrossover(Problem& prob);
+    void newMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation);
+    void newReplacement(Population& nextPop, Population currentPop, Problem prob);
+    void originalSelection(Population& currentPop, Problem prob);
+    void originalCrossover(Problem& prob);
+    void originalMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation);
+    void originalReplacement(Population& nextPop, Population currentPop, Problem prob);
     void localSearch(Problem prob);
     double rand_double(double min, double max)
     {
