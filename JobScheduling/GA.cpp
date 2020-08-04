@@ -133,6 +133,8 @@ void originalGeneticAlgorithm(int testIndex) {
     cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
 }
 
+
+
 int draw() {
     GLFWwindow* window;
 
@@ -187,7 +189,7 @@ int draw() {
 
     GLfloat* lineVertices = new GLfloat[prob.job_num * 6];
     GLfloat* redLineVertices = new GLfloat[prob.job_num * 6];
-    GLfloat* rulerVertices = new GLfloat[(bestJobList[prob.job_num - 1].jobDeadline + 2) * 6];
+    GLfloat* rulerVertices = new GLfloat[(ceil(longestDeadline) + 2) * 6];
 
     for (int i = 0; i < prob.job_num; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;
@@ -216,7 +218,8 @@ int draw() {
     position_index = 0;
     height = 0.95 * SCREEN_HEIGHT;
     int interval = 0;
-    for (int i = 0; i < ceil(longestDeadline) + 1; i++) {
+    
+    for (int i = 0; i < ceil(longestDeadline)+1; i++) {
         rulerVertices[position_index] = (interval) * 30;
         rulerVertices[position_index + 1] = height;
         rulerVertices[position_index + 2] = 0;
@@ -267,6 +270,7 @@ int draw() {
     glfwTerminate();
 
 }
+
 
 
 int main() {
