@@ -26,9 +26,12 @@ class Problem {
 public:
     int job_num;
     int solution_num;
+    double firstReleaseTime;
+    double deadLine;
     double mutation_rate;
     double crossover_rate;
     vector<Problem::GeneralJob> jobs;
-    float load_problem(string filename, Problem& prob);
+    float loadDeadlineProb(string filename, Problem& prob);
+    float loadNonDeadlineProb(string filename, Problem& prob);
 
 };

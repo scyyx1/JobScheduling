@@ -8,8 +8,10 @@ public:
     class Solution {
     public:
         double fitness;
+        double turnAroundTime;
         vector<double> jobStartTimes;
-        void compute_fitness(Problem prob);
+        void deadlineComputeFitness(Problem prob);
+        void nonDeadlineComputeFitness(Problem prob);
     };
 
     class GeneralJobBlock {
@@ -34,7 +36,7 @@ public:
 
 public:
     vector<Population::Solution> solutions;
-    void init_population(Problem prob);
+    void initDeadlinePop(Problem prob);
     void newSelection(Population& currentPop, Problem prob);
     void newCrossover(Problem& prob);
     void newMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation);
@@ -43,7 +45,13 @@ public:
     void originalCrossover(Problem& prob);
     void originalMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation);
     void originalReplacement(Population& nextPop, Population currentPop, Problem prob);
-    void localSearch(Problem prob);
+    void newLocalSearch(Problem prob);
+    void initNonDeadlinePop(Problem prob);
+    void nonDeadlineSelection(Population& currentPop, Problem prob);
+    void nonDeadlineCrossover(Problem& prob);
+    void nonDeadlineMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation);
+    void nonDeadlineReplacement(Population& nextPop, Population currentPop, Problem prob);
+    void nonDeadlineLocalSearch(Problem prob);
     double rand_double(double min, double max)
     {
 

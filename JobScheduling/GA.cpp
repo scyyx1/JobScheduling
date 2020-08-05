@@ -27,8 +27,10 @@ public:
 
 Population::Solution bestSolutionForNewGA;
 Population::Solution bestSolutionForOriginGA;
+Population::Solution bestSolutionForNonDeadLine;
 double bestFitness;
-Problem prob;
+Problem deadLineProblem;
+Problem nonDeadlineProblem;
 float longestDeadline = 0;
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -50,6 +52,14 @@ void updateBestSolutionForOriginGA(Population pop, Problem prob) {
     }
 }
 
+void updateBestSolutionForNonDeadline(Population pop, Problem prob) {
+    for (int i = 0; i < prob.solution_num; i++) {
+        if (pop.solutions[i].fitness < bestFitness) {
+            bestSolutionForOriginGA = pop.solutions[i];
+            bestFitness = pop.solutions[i].fitness;
+        }
+    }
+}
 uint64_t timeSinceEpochMillisec() {
     using namespace std::chrono;
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
@@ -58,38 +68,38 @@ uint64_t timeSinceEpochMillisec() {
 void newGeneticAlgorithm(int testIndex)
 {   
     string filename("TestFile0.txt");
-    prob.load_problem(filename, prob);
-    prob.solution_num = 10;
-    prob.crossover_rate = 0.8;
-    prob.mutation_rate = 0.2;
+    deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
+    deadLineProblem.solution_num = 10;
+    deadLineProblem.crossover_rate = 0.8;
+    deadLineProblem.mutation_rate = 0.2;
 
     Population currentPop;
     int totalIteration = 10;
     int curIteration = 0;
     
-    currentPop.init_population(prob);
+    currentPop.initDeadlinePop(deadLineProblem);
     bestSolutionForNewGA = currentPop.solutions[0];
     bestFitness = currentPop.solutions[0].fitness;
-    updateBestSolutionForNewGA(currentPop, prob);
-    currentPop.localSearch(prob);
+    updateBestSolutionForNewGA(currentPop, deadLineProblem);
+    currentPop.newLocalSearch(deadLineProblem);
 
     while (curIteration < totalIteration) {
         Population nextPop;
-        nextPop.newSelection(currentPop, prob);
+        nextPop.newSelection(currentPop, deadLineProblem);
         //cout << "selection done" << endl;
-        nextPop.newCrossover(prob);
+        nextPop.newCrossover(deadLineProblem);
         //cout << "crossover done" << endl;
-        nextPop.newMutation(prob, totalIteration, curIteration, currentPop);
+        nextPop.newMutation(deadLineProblem, totalIteration, curIteration, currentPop);
         //cout << "mutation done" << endl;
-        nextPop.newReplacement(nextPop, currentPop, prob);
+        nextPop.newReplacement(nextPop, currentPop, deadLineProblem);
         //cout << "replacement done" << endl;
         if (curIteration % 100 == 0) {
-           nextPop.localSearch(prob);
+           nextPop.newLocalSearch(deadLineProblem);
             //cout << "local search done" << endl;
         }
         
         currentPop = nextPop;
-        updateBestSolutionForNewGA(currentPop, prob);
+        updateBestSolutionForNewGA(currentPop, deadLineProblem);
         curIteration++;
         //cout << curIteration << endl;
     }
@@ -99,33 +109,33 @@ void newGeneticAlgorithm(int testIndex)
 
 void originalGeneticAlgorithm(int testIndex) {
     string filename("TestFile0.txt");
-    longestDeadline = prob.load_problem(filename, prob);
-    prob.solution_num = 10;
-    prob.crossover_rate = 0.8;
-    prob.mutation_rate = 0.2;
+    longestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
+    deadLineProblem.solution_num = 10;
+    deadLineProblem.crossover_rate = 0.8;
+    deadLineProblem.mutation_rate = 0.2;
 
     Population currentPop;
     int totalIteration = 10;
     int curIteration = 0;
 
-    currentPop.init_population(prob);
+    currentPop.initDeadlinePop(deadLineProblem);
     bestSolutionForOriginGA = currentPop.solutions[0];
     bestFitness = currentPop.solutions[0].fitness;
-    updateBestSolutionForOriginGA(currentPop, prob);
+    updateBestSolutionForOriginGA(currentPop, deadLineProblem);
 
  
     while (curIteration < totalIteration) {
         Population nextPop;
-        nextPop.originalSelection(currentPop, prob);
+        nextPop.originalSelection(currentPop, deadLineProblem);
         //cout << "selection done" << endl;
-        nextPop.originalCrossover(prob);
+        nextPop.originalCrossover(deadLineProblem);
         //cout << "crossover done" << endl;
-        nextPop.originalMutation(prob, totalIteration, curIteration, currentPop);
+        nextPop.originalMutation(deadLineProblem, totalIteration, curIteration, currentPop);
         //cout << "mutation done" << endl;
-        nextPop.originalReplacement(nextPop, currentPop, prob);
+        nextPop.originalReplacement(nextPop, currentPop, deadLineProblem);
         //cout << "replacement done" << endl;
         currentPop = nextPop;
-        updateBestSolutionForNewGA(currentPop, prob);
+        updateBestSolutionForNewGA(currentPop, deadLineProblem);
         curIteration++;
         //cout << curIteration << endl;
     }
@@ -133,7 +143,45 @@ void originalGeneticAlgorithm(int testIndex) {
     cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
 }
 
+void nonDeadlineGeneticAlgorithm(int testIndex) {
+    string filename("TestFile0.txt");
+    longestDeadline = nonDeadlineProblem.loadNonDeadlineProb(filename, nonDeadlineProblem);
+    nonDeadlineProblem.solution_num = 10;
+    nonDeadlineProblem.crossover_rate = 0.8;
+    nonDeadlineProblem.mutation_rate = 0.2;
 
+    Population currentPop;
+    int totalIteration = 10;
+    int curIteration = 0;
+
+    currentPop.initNonDeadlinePop(nonDeadlineProblem);
+    bestSolutionForNonDeadLine = currentPop.solutions[0];
+    bestFitness = currentPop.solutions[0].fitness;
+    updateBestSolutionForNonDeadline(currentPop, nonDeadlineProblem);
+    currentPop.nonDeadlineLocalSearch(nonDeadlineProblem);
+
+    while (curIteration < totalIteration) {
+        Population nextPop;
+        nextPop.nonDeadlineSelection(currentPop, nonDeadlineProblem);
+        //cout << "selection done" << endl;
+        nextPop.nonDeadlineCrossover(nonDeadlineProblem);
+        //cout << "crossover done" << endl;
+        nextPop.nonDeadlineMutation(nonDeadlineProblem, totalIteration, curIteration, currentPop);
+        //cout << "mutation done" << endl;
+        nextPop.nonDeadlineReplacement(nextPop, currentPop, nonDeadlineProblem);
+        //cout << "replacement done" << endl;
+        if (curIteration % 100 == 0) {
+            nextPop.nonDeadlineLocalSearch(nonDeadlineProblem);
+            //cout << "local search done" << endl;
+        }
+
+        currentPop = nextPop;
+        updateBestSolutionForNonDeadline(currentPop, nonDeadlineProblem);
+        curIteration++;
+        //cout << curIteration << endl;
+    }
+    cout << "Non DeadLine Problem: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
+}
 
 int draw() {
     GLFWwindow* window;
@@ -168,13 +216,13 @@ int draw() {
 
     float height = 0.9 * SCREEN_HEIGHT;
 
-    float segment = SCREEN_HEIGHT / (prob.job_num + 1);
+    float segment = SCREEN_HEIGHT / (deadLineProblem.job_num + 1);
     int position_index = 0;
     int vertex_num = 0;
 
     vector<JobList> bestJobList;
     for (int i = 0; i < bestSolutionForNewGA.jobStartTimes.size(); i++) {
-        JobList* curJob = new JobList(bestSolutionForNewGA.jobStartTimes[i], prob.jobs[i].processTime, prob.jobs[i].releaseTime, prob.jobs[i].deadLine);
+        JobList* curJob = new JobList(bestSolutionForNewGA.jobStartTimes[i], deadLineProblem.jobs[i].processTime, deadLineProblem.jobs[i].releaseTime, deadLineProblem.jobs[i].deadLine);
         bestJobList.push_back(*curJob);
         //   cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
     }
@@ -187,11 +235,11 @@ int draw() {
         }
     );
 
-    GLfloat* lineVertices = new GLfloat[prob.job_num * 6];
-    GLfloat* redLineVertices = new GLfloat[prob.job_num * 6];
+    GLfloat* lineVertices = new GLfloat[deadLineProblem.job_num * 6];
+    GLfloat* redLineVertices = new GLfloat[deadLineProblem.job_num * 6];
     GLfloat* rulerVertices = new GLfloat[(ceil(longestDeadline) + 2) * 6];
 
-    for (int i = 0; i < prob.job_num; i++) {
+    for (int i = 0; i < deadLineProblem.job_num; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;
         lineVertices[position_index + 1] = height;
         lineVertices[position_index + 2] = 0;
@@ -204,7 +252,7 @@ int draw() {
     position_index = 0;
     height = 0.9 * SCREEN_HEIGHT;
 
-    for (int i = 0; i < prob.job_num; i++) {
+    for (int i = 0; i < deadLineProblem.job_num; i++) {
         redLineVertices[position_index] = bestJobList[i].startTime * 30;
         redLineVertices[position_index + 1] = height;
         redLineVertices[position_index + 2] = 0;
@@ -252,10 +300,10 @@ int draw() {
         glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
         glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(longestDeadline)));
         glVertexPointer(3, GL_FLOAT, 0, lineVertices);
-        glDrawArrays(GL_LINES, 0, 2 * prob.job_num);
+        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);
         glColor3f(1, 0, 0);
         glVertexPointer(3, GL_FLOAT, 0, redLineVertices);
-        glDrawArrays(GL_LINES, 0, 2 * prob.job_num);
+        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);
 
         glDisableClientState(GL_VERTEX_ARRAY);
 
@@ -278,10 +326,11 @@ int main() {
         uint64_t time = timeSinceEpochMillisec();
         newGeneticAlgorithm(i);
         originalGeneticAlgorithm(i);
+        nonDeadlineGeneticAlgorithm(i);
         time = timeSinceEpochMillisec() - time;
         cout << " Time spent: " << time << " miliseconds" << endl;
     }
-    draw();
+    //draw();
     return 0;
 }
 
