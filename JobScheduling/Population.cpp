@@ -390,7 +390,7 @@ void Population::Solution::nonDeadlineComputeFitness(Problem prob) {
 
     //cout << fitness << "after";
 
-    fitness += (turnAroundTime - prob.firstReleaseTime);
+    fitness = 0.7*fitness + 0.3*(turnAroundTime - prob.firstReleaseTime);
 
     //cout << fitness << endl;
 }

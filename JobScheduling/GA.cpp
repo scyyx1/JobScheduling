@@ -27,36 +27,40 @@ public:
 
 Population::Solution bestSolutionForNewGA;
 Population::Solution bestSolutionForOriginGA;
-Population::Solution bestSolutionForNonDeadLine;
-double bestFitness;
+Population::Solution bestSolutionForNonDeadline;
+double bestFitnessNewGA;
+double bestFitnessOriginGA;
+double bestFitnessNonDeadline;
 Problem deadLineProblem;
 Problem nonDeadlineProblem;
-float longestDeadline = 0;
+float originalLongestDeadline = 0;
+float newLongestDeadline = 0;
+
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 void updateBestSolutionForNewGA(Population pop, Problem prob) {
     for (int i = 0; i < prob.solution_num; i++) {
-        if (pop.solutions[i].fitness < bestFitness) {
+        if (pop.solutions[i].fitness < bestFitnessNewGA) {
             bestSolutionForNewGA = pop.solutions[i];
-            bestFitness = pop.solutions[i].fitness;
+            bestFitnessNewGA = pop.solutions[i].fitness;
         }
     }
 }
 
 void updateBestSolutionForOriginGA(Population pop, Problem prob) {
     for (int i = 0; i < prob.solution_num; i++) {
-        if (pop.solutions[i].fitness < bestFitness) {
+        if (pop.solutions[i].fitness < bestFitnessOriginGA) {
             bestSolutionForOriginGA = pop.solutions[i];
-            bestFitness = pop.solutions[i].fitness;
+            bestFitnessOriginGA = pop.solutions[i].fitness;
         }
     }
 }
 
 void updateBestSolutionForNonDeadline(Population pop, Problem prob) {
     for (int i = 0; i < prob.solution_num; i++) {
-        if (pop.solutions[i].fitness < bestFitness) {
-            bestSolutionForOriginGA = pop.solutions[i];
-            bestFitness = pop.solutions[i].fitness;
+        if (pop.solutions[i].fitness < bestFitnessNonDeadline) {
+            bestSolutionForNonDeadline = pop.solutions[i];
+            bestFitnessNonDeadline = pop.solutions[i].fitness;
         }
     }
 }
@@ -68,7 +72,7 @@ uint64_t timeSinceEpochMillisec() {
 void newGeneticAlgorithm(int testIndex)
 {   
     string filename("TestFile0.txt");
-    deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
+    newLongestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
     deadLineProblem.solution_num = 10;
     deadLineProblem.crossover_rate = 0.8;
     deadLineProblem.mutation_rate = 0.2;
@@ -79,7 +83,7 @@ void newGeneticAlgorithm(int testIndex)
     
     currentPop.initDeadlinePop(deadLineProblem);
     bestSolutionForNewGA = currentPop.solutions[0];
-    bestFitness = currentPop.solutions[0].fitness;
+    bestFitnessNewGA = currentPop.solutions[0].fitness;
     updateBestSolutionForNewGA(currentPop, deadLineProblem);
     currentPop.newLocalSearch(deadLineProblem);
 
@@ -104,12 +108,12 @@ void newGeneticAlgorithm(int testIndex)
         //cout << curIteration << endl;
     }
 
-    cout << "New Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
+    cout << "New Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessNewGA << endl;
 }
 
 void originalGeneticAlgorithm(int testIndex) {
     string filename("TestFile0.txt");
-    longestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
+    originalLongestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem); 
     deadLineProblem.solution_num = 10;
     deadLineProblem.crossover_rate = 0.8;
     deadLineProblem.mutation_rate = 0.2;
@@ -120,7 +124,7 @@ void originalGeneticAlgorithm(int testIndex) {
 
     currentPop.initDeadlinePop(deadLineProblem);
     bestSolutionForOriginGA = currentPop.solutions[0];
-    bestFitness = currentPop.solutions[0].fitness;
+    bestFitnessOriginGA = currentPop.solutions[0].fitness;
     updateBestSolutionForOriginGA(currentPop, deadLineProblem);
 
  
@@ -135,17 +139,17 @@ void originalGeneticAlgorithm(int testIndex) {
         nextPop.originalReplacement(nextPop, currentPop, deadLineProblem);
         //cout << "replacement done" << endl;
         currentPop = nextPop;
-        updateBestSolutionForNewGA(currentPop, deadLineProblem);
-        curIteration++;
+        updateBestSolutionForOriginGA(currentPop, deadLineProblem);
+        curIteration++; 
         //cout << curIteration << endl;
     }
 
-    cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
+    cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessOriginGA << endl;
 }
 
 void nonDeadlineGeneticAlgorithm(int testIndex) {
     string filename("TestFile0.txt");
-    longestDeadline = nonDeadlineProblem.loadNonDeadlineProb(filename, nonDeadlineProblem);
+    nonDeadlineProblem.loadNonDeadlineProb(filename, nonDeadlineProblem);
     nonDeadlineProblem.solution_num = 10;
     nonDeadlineProblem.crossover_rate = 0.8;
     nonDeadlineProblem.mutation_rate = 0.2;
@@ -155,8 +159,8 @@ void nonDeadlineGeneticAlgorithm(int testIndex) {
     int curIteration = 0;
 
     currentPop.initNonDeadlinePop(nonDeadlineProblem);
-    bestSolutionForNonDeadLine = currentPop.solutions[0];
-    bestFitness = currentPop.solutions[0].fitness;
+    bestSolutionForNonDeadline = currentPop.solutions[0];
+    bestFitnessNonDeadline = currentPop.solutions[0].fitness;
     updateBestSolutionForNonDeadline(currentPop, nonDeadlineProblem);
     currentPop.nonDeadlineLocalSearch(nonDeadlineProblem);
 
@@ -180,24 +184,19 @@ void nonDeadlineGeneticAlgorithm(int testIndex) {
         curIteration++;
         //cout << curIteration << endl;
     }
-    cout << "Non DeadLine Problem: TestID:" << testIndex << endl << " BestFitness: " << bestFitness << endl;
+    cout << "Non DeadLine Problem: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessNonDeadline << endl;
 }
 
 int draw() {
-    GLFWwindow* window;
-
+    GLFWwindow* originalWindow;
+    GLFWwindow* newWindow;
+    //GLFWwindow* nonDeadlineWindow;
     if (!glfwInit())
-        return -1;
-
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-
+        return -1; 
+    newWindow = glfwCreateWindow(640, 480, "New", NULL, NULL);
+    originalWindow = glfwCreateWindow(640, 480, "Original", NULL, NULL);
+    glfwMakeContextCurrent(newWindow);
+   
     if (glewInit() != GLEW_OK) {
         std::cout << "Error!" << std::endl;
     }
@@ -210,9 +209,6 @@ int draw() {
     glOrtho(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, 0, 1); // essentially set coordinate system
     glMatrixMode(GL_MODELVIEW); // (default matrix mode) modelview matrix defines how your objects are transformed (meaning translation, rotation and scaling) in your world
     glLoadIdentity(); // same as above comment
-
-    string line;
-    string str1, str2, str3;
 
     float height = 0.9 * SCREEN_HEIGHT;
 
@@ -237,7 +233,7 @@ int draw() {
 
     GLfloat* lineVertices = new GLfloat[deadLineProblem.job_num * 6];
     GLfloat* redLineVertices = new GLfloat[deadLineProblem.job_num * 6];
-    GLfloat* rulerVertices = new GLfloat[(ceil(longestDeadline) + 2) * 6];
+    GLfloat* rulerVertices = new GLfloat[((int)ceil(newLongestDeadline) + 2) * 6];
 
     for (int i = 0; i < deadLineProblem.job_num; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;
@@ -267,7 +263,8 @@ int draw() {
     height = 0.95 * SCREEN_HEIGHT;
     int interval = 0;
     
-    for (int i = 0; i < ceil(longestDeadline)+1; i++) {
+    //printf("longestdeadline: %d\n", longestDeadline);
+    for (int i = 0; i < ceil(newLongestDeadline)+1; i++) {
         rulerVertices[position_index] = (interval) * 30;
         rulerVertices[position_index + 1] = height;
         rulerVertices[position_index + 2] = 0;
@@ -280,13 +277,127 @@ int draw() {
     rulerVertices[position_index] = 0;
     rulerVertices[position_index + 1] = height;
     rulerVertices[position_index + 2] = 0;
-    rulerVertices[position_index + 3] = ceil(longestDeadline) * 30;
+    rulerVertices[position_index + 3] = ceil(newLongestDeadline) * 30;
+    rulerVertices[position_index + 4] = height;
+    rulerVertices[position_index + 5] = 0;
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Render OpenGL here
+    glEnable(GL_LINE_SMOOTH);
+    glEnable(GL_LINE_STIPPLE);
+    glPushAttrib(GL_LINE_BIT);
+    glLineWidth(4);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glColor3f(1, 1, 1);
+    glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
+    glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(newLongestDeadline))); //printf("%f\n", 2 * (3 + ceil(newLongestDeadline)));
+    glVertexPointer(3, GL_FLOAT, 0, lineVertices);
+    glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);  //printf("%d\n", 2 * deadLineProblem.job_num);
+    glColor3f(1, 0, 0);
+    glVertexPointer(3, GL_FLOAT, 0, redLineVertices);
+    glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+
+    // Swap front and back buffers
+    glfwSwapBuffers(newWindow);
+
+    // Poll for and process events
+    glfwPollEvents();
+    
+
+    //start of the original window
+    glfwMakeContextCurrent(originalWindow);
+
+    if (glewInit() != GLEW_OK) {
+        std::cout << "Error!" << std::endl;
+    }
+
+    std::cout << glGetString(GL_VERSION) << std::endl;
+
+    glViewport(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT); // specifies the part of the window to which OpenGL will draw (in pixels), convert from normalised to pixels
+    glMatrixMode(GL_PROJECTION); // projection matrix defines the properties of the camera that views the objects in the world coordinate frame. Here you typically set the zoom factor, aspect ratio and the near and far clipping planes
+    glLoadIdentity(); // replace the current matrix with the identity matrix and starts us a fresh because matrix transforms such as glOrpho and glRotate cumulate, basically puts us at (0, 0, 0)
+    glOrtho(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, 0, 1); // essentially set coordinate system
+    glMatrixMode(GL_MODELVIEW); // (default matrix mode) modelview matrix defines how your objects are transformed (meaning translation, rotation and scaling) in your world
+    glLoadIdentity(); // same as above comment
+
+    height = 0.9 * SCREEN_HEIGHT;
+
+    segment = SCREEN_HEIGHT / (deadLineProblem.job_num + 1);
+    position_index = 0;
+    vertex_num = 0;
+
+    bestJobList.clear();
+    for (int i = 0; i < bestSolutionForOriginGA.jobStartTimes.size(); i++) {
+        JobList* curJob = new JobList(bestSolutionForOriginGA.jobStartTimes[i], deadLineProblem.jobs[i].processTime, deadLineProblem.jobs[i].releaseTime, deadLineProblem.jobs[i].deadLine);
+        //printf("%f\n", bestSolutionForOriginGA.jobStartTimes[i]);
+        bestJobList.push_back(*curJob);
+        //   cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
+    }
+
+    std::sort(bestJobList.begin(), bestJobList.end(),
+        [](const JobList& a, const JobList& b)
+        {
+            return a.jobReleasingTime < b.jobReleasingTime;
+
+        }
+    );
+
+    lineVertices = new GLfloat[deadLineProblem.job_num * 6];              
+    redLineVertices = new GLfloat[deadLineProblem.job_num * 6];           
+    rulerVertices = new GLfloat[(ceil(originalLongestDeadline) + 2) * 6]; 
+
+    for (int i = 0; i < deadLineProblem.job_num; i++) {
+        lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;  
+        lineVertices[position_index + 1] = height;                            
+        lineVertices[position_index + 2] = 0;                                 
+        lineVertices[position_index + 3] = bestJobList[i].jobDeadline * 30;   
+        lineVertices[position_index + 4] = height;                            
+        lineVertices[position_index + 5] = 0;                                 
+        position_index += 6;
+        height -= segment;
+    }
+    position_index = 0;
+    height = 0.9 * SCREEN_HEIGHT; 
+
+    for (int i = 0; i < deadLineProblem.job_num; i++) {
+        redLineVertices[position_index] = bestJobList[i].startTime * 30;
+        redLineVertices[position_index + 1] = height;
+        redLineVertices[position_index + 2] = 0;
+        redLineVertices[position_index + 3] = (bestJobList[i].startTime + bestJobList[i].processTime) * 30;
+        redLineVertices[position_index + 4] = height;
+        redLineVertices[position_index + 5] = 0;
+        position_index += 6;
+        height -= segment;
+    }
+
+    position_index = 0;
+    height = 0.95 * SCREEN_HEIGHT;
+    interval = 0;
+
+    for (int i = 0; i < ceil(originalLongestDeadline) + 1; i++) {
+        rulerVertices[position_index] = (interval) * 30; 
+        rulerVertices[position_index + 1] = height;
+        rulerVertices[position_index + 2] = 0;
+        rulerVertices[position_index + 3] = (interval) * 30;
+        rulerVertices[position_index + 4] = height + 10;
+        rulerVertices[position_index + 5] = 0;
+        position_index += 6;
+        interval += 1;
+    }
+    rulerVertices[position_index] = 0;
+    rulerVertices[position_index + 1] = height;
+    rulerVertices[position_index + 2] = 0;
+    rulerVertices[position_index + 3] = ceil(originalLongestDeadline) * 30;
     rulerVertices[position_index + 4] = height;
     rulerVertices[position_index + 5] = 0;
 
 
     // Loop until the user closes the window
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(originalWindow))
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -298,18 +409,18 @@ int draw() {
         glEnableClientState(GL_VERTEX_ARRAY);
         glColor3f(1, 1, 1);
         glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
-        glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(longestDeadline)));
-        glVertexPointer(3, GL_FLOAT, 0, lineVertices);
-        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);
-        glColor3f(1, 0, 0);
-        glVertexPointer(3, GL_FLOAT, 0, redLineVertices);
-        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);
+        glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(originalLongestDeadline))); 
+        glVertexPointer(3, GL_FLOAT, 0, lineVertices);                     
+        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);            
+        glColor3f(1, 0, 0);                                                
+        glVertexPointer(3, GL_FLOAT, 0, redLineVertices);                  
+        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);            
 
         glDisableClientState(GL_VERTEX_ARRAY);
 
 
         // Swap front and back buffers
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(originalWindow);
 
         // Poll for and process events
         glfwPollEvents();
@@ -324,13 +435,13 @@ int draw() {
 int main() {
     for (int i = 0; i < 1; i++) {
         uint64_t time = timeSinceEpochMillisec();
-        newGeneticAlgorithm(i);
-        originalGeneticAlgorithm(i);
-        nonDeadlineGeneticAlgorithm(i);
+        newGeneticAlgorithm(i);        
+        originalGeneticAlgorithm(i);          
+        nonDeadlineGeneticAlgorithm(i);       
         time = timeSinceEpochMillisec() - time;
         cout << " Time spent: " << time << " miliseconds" << endl;
     }
-    //draw();
+    draw();
     return 0;
 }
 

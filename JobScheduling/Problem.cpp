@@ -18,17 +18,16 @@ float Problem::loadDeadlineProb(string filename, Problem& prob)
         word >> str3;
 
         tempJob.releaseTime = atof(str1.c_str());
-        tempJob.deadLine = atof(str2.c_str());
+        tempJob.deadLine = atof(str2.c_str());  
         tempJob.processTime = atof(str3.c_str());
         tempJob.latestStartTime = tempJob.deadLine - tempJob.processTime;
         if (tempJob.deadLine > longestDeadline) {
             longestDeadline = tempJob.deadLine;
         }
-
         prob.jobs.push_back(tempJob);
     }
     in.close();
-    prob.job_num = prob.jobs.size();
+    prob.job_num = prob.jobs.size(); 
     return longestDeadline;
 }
 
@@ -55,7 +54,6 @@ float Problem::loadNonDeadlineProb(string filename, Problem& prob)
         if (tempJob.releaseTime + tempJob.processTime > prob.deadLine + EPS) {
             prob.deadLine = tempJob.releaseTime + tempJob.processTime;
         }
-
 
         if ((prob.firstReleaseTime == -1) || (prob.firstReleaseTime > tempJob.releaseTime + EPS)) {
             prob.firstReleaseTime = tempJob.releaseTime;
