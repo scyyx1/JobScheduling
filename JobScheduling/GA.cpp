@@ -11,8 +11,10 @@
 
 using namespace std;
 
+// The class used to compute blocks
 class JobList {
 public:
+    // Detail information of each jobs in the solution
     double jobReleasingTime;
     double jobDeadline;
     double startTime;
@@ -38,8 +40,11 @@ float newLongestDeadline = 0;
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
+
+// Updates the best solution and record it for new genetic algorithm
 void updateBestSolutionForNewGA(Population pop, Problem prob) {
-    for (int i = 0; i < prob.solution_num; i++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
+        // Uses naive accept function which accepts better solutions only
         if (pop.solutions[i].fitness < bestFitnessNewGA) {
             bestSolutionForNewGA = pop.solutions[i];
             bestFitnessNewGA = pop.solutions[i].fitness;
@@ -47,8 +52,10 @@ void updateBestSolutionForNewGA(Population pop, Problem prob) {
     }
 }
 
+// Updates the best solution and record it for original genetic algorithm
 void updateBestSolutionForOriginGA(Population pop, Problem prob) {
-    for (int i = 0; i < prob.solution_num; i++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
+        // Uses naive accept function which accepts better solutions only
         if (pop.solutions[i].fitness < bestFitnessOriginGA) {
             bestSolutionForOriginGA = pop.solutions[i];
             bestFitnessOriginGA = pop.solutions[i].fitness;
@@ -56,26 +63,31 @@ void updateBestSolutionForOriginGA(Population pop, Problem prob) {
     }
 }
 
+// Updates the best solution and record it for genetic algorithm of limited job problem
 void updateBestSolutionForNonDeadline(Population pop, Problem prob) {
-    for (int i = 0; i < prob.solution_num; i++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
+        // Uses naive accept function which accepts better solutions only
         if (pop.solutions[i].fitness < bestFitnessNonDeadline) {
             bestSolutionForNonDeadline = pop.solutions[i];
             bestFitnessNonDeadline = pop.solutions[i].fitness;
         }
     }
 }
+
+// Returns the current time in millisecond
 uint64_t timeSinceEpochMillisec() {
     using namespace std::chrono;
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
+// New genetic algorithm
 void newGeneticAlgorithm(int testIndex)
 {   
     string filename("TestFile0.txt");
     newLongestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
-    deadLineProblem.solution_num = 10;
-    deadLineProblem.crossover_rate = 0.8;
-    deadLineProblem.mutation_rate = 0.2;
+    deadLineProblem.solutionNumber = 10;
+    deadLineProblem.crossoverRate = 0.8;
+    deadLineProblem.mutationRate = 0.2;
 
     Population currentPop;
     int totalIteration = 10;
@@ -85,38 +97,40 @@ void newGeneticAlgorithm(int testIndex)
     bestSolutionForNewGA = currentPop.solutions[0];
     bestFitnessNewGA = currentPop.solutions[0].fitness;
     updateBestSolutionForNewGA(currentPop, deadLineProblem);
+    // Local search
     currentPop.newLocalSearch(deadLineProblem);
 
     while (curIteration < totalIteration) {
         Population nextPop;
+        // Select populaition
         nextPop.newSelection(currentPop, deadLineProblem);
-        //cout << "selection done" << endl;
+        // Apply crossover
         nextPop.newCrossover(deadLineProblem);
-        //cout << "crossover done" << endl;
+        // Apply mutation
         nextPop.newMutation(deadLineProblem, totalIteration, curIteration, currentPop);
-        //cout << "mutation done" << endl;
+        // Apply replacement function
         nextPop.newReplacement(nextPop, currentPop, deadLineProblem);
-        //cout << "replacement done" << endl;
+        // Apply local search every 100 iteration
         if (curIteration % 100 == 0) {
            nextPop.newLocalSearch(deadLineProblem);
-            //cout << "local search done" << endl;
         }
         
+        // Update counter and best solution
         currentPop = nextPop;
         updateBestSolutionForNewGA(currentPop, deadLineProblem);
         curIteration++;
-        //cout << curIteration << endl;
     }
 
     cout << "New Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessNewGA << endl;
 }
 
+// Original genetic algorithm
 void originalGeneticAlgorithm(int testIndex) {
     string filename("TestFile0.txt");
     originalLongestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem); 
-    deadLineProblem.solution_num = 10;
-    deadLineProblem.crossover_rate = 0.8;
-    deadLineProblem.mutation_rate = 0.2;
+    deadLineProblem.solutionNumber = 10;
+    deadLineProblem.crossoverRate = 0.8;
+    deadLineProblem.mutationRate = 0.2;
 
     Population currentPop;
     int totalIteration = 10;
@@ -127,32 +141,35 @@ void originalGeneticAlgorithm(int testIndex) {
     bestFitnessOriginGA = currentPop.solutions[0].fitness;
     updateBestSolutionForOriginGA(currentPop, deadLineProblem);
 
- 
     while (curIteration < totalIteration) {
         Population nextPop;
+        // Apply original selection
         nextPop.originalSelection(currentPop, deadLineProblem);
-        //cout << "selection done" << endl;
+        //Apply original crossover
         nextPop.originalCrossover(deadLineProblem);
-        //cout << "crossover done" << endl;
+        // Apply original mutation
         nextPop.originalMutation(deadLineProblem, totalIteration, curIteration, currentPop);
-        //cout << "mutation done" << endl;
+        // Apply original replacement function
         nextPop.originalReplacement(nextPop, currentPop, deadLineProblem);
-        //cout << "replacement done" << endl;
+
+        // Updates the counter and best solution
         currentPop = nextPop;
         updateBestSolutionForOriginGA(currentPop, deadLineProblem);
         curIteration++; 
-        //cout << curIteration << endl;
     }
 
     cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessOriginGA << endl;
 }
 
+// Genetic algorithm for limited job algorithm
 void nonDeadlineGeneticAlgorithm(int testIndex) {
+
+    // Read jobs from file and initialize problem
     string filename("TestFile0.txt");
     nonDeadlineProblem.loadNonDeadlineProb(filename, nonDeadlineProblem);
-    nonDeadlineProblem.solution_num = 10;
-    nonDeadlineProblem.crossover_rate = 0.8;
-    nonDeadlineProblem.mutation_rate = 0.2;
+    nonDeadlineProblem.solutionNumber = 10;
+    nonDeadlineProblem.crossoverRate = 0.8;
+    nonDeadlineProblem.mutationRate = 0.2;
 
     Population currentPop;
     int totalIteration = 10;
@@ -162,35 +179,37 @@ void nonDeadlineGeneticAlgorithm(int testIndex) {
     bestSolutionForNonDeadline = currentPop.solutions[0];
     bestFitnessNonDeadline = currentPop.solutions[0].fitness;
     updateBestSolutionForNonDeadline(currentPop, nonDeadlineProblem);
+    // Apply local search before the first iteration
     currentPop.nonDeadlineLocalSearch(nonDeadlineProblem);
 
     while (curIteration < totalIteration) {
         Population nextPop;
+        // Apply selection for limited job problem
         nextPop.nonDeadlineSelection(currentPop, nonDeadlineProblem);
-        //cout << "selection done" << endl;
+        // Apply crossover for limited job problem
         nextPop.nonDeadlineCrossover(nonDeadlineProblem);
-        //cout << "crossover done" << endl;
+        // Apply mutation for limited job problem
         nextPop.nonDeadlineMutation(nonDeadlineProblem, totalIteration, curIteration, currentPop);
-        //cout << "mutation done" << endl;
+        // Apply replacement for limited job problem
         nextPop.nonDeadlineReplacement(nextPop, currentPop, nonDeadlineProblem);
-        //cout << "replacement done" << endl;
+        // Apply local search every 100 iterations
         if (curIteration % 100 == 0) {
             nextPop.nonDeadlineLocalSearch(nonDeadlineProblem);
-            //cout << "local search done" << endl;
         }
 
+        // Update counter and best solution
         currentPop = nextPop;
         updateBestSolutionForNonDeadline(currentPop, nonDeadlineProblem);
         curIteration++;
-        //cout << curIteration << endl;
     }
+
     cout << "Non DeadLine Problem: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessNonDeadline << endl;
 }
 
+// Method to visualize the result
 int draw() {
     GLFWwindow* originalWindow;
     GLFWwindow* newWindow;
-    //GLFWwindow* nonDeadlineWindow;
     if (!glfwInit())
         return -1; 
     newWindow = glfwCreateWindow(640, 480, "New", NULL, NULL);
@@ -202,17 +221,22 @@ int draw() {
     }
 
     std::cout << glGetString(GL_VERSION) << std::endl;
-
-    glViewport(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT); // specifies the part of the window to which OpenGL will draw (in pixels), convert from normalised to pixels
-    glMatrixMode(GL_PROJECTION); // projection matrix defines the properties of the camera that views the objects in the world coordinate frame. Here you typically set the zoom factor, aspect ratio and the near and far clipping planes
-    glLoadIdentity(); // replace the current matrix with the identity matrix and starts us a fresh because matrix transforms such as glOrpho and glRotate cumulate, basically puts us at (0, 0, 0)
-    glOrtho(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, 0, 1); // essentially set coordinate system
-    glMatrixMode(GL_MODELVIEW); // (default matrix mode) modelview matrix defines how your objects are transformed (meaning translation, rotation and scaling) in your world
-    glLoadIdentity(); // same as above comment
+    // Specifies the part of the window to which OpenGL will draw (in pixels), convert from normalised to pixels
+    glViewport(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT);
+    // Projection matrix defines the properties of the camera that views the objects in the world coordinate frame. Here you typically set the zoom factor, aspect ratio and the near and far clipping planes
+    glMatrixMode(GL_PROJECTION); 
+    // Replace the current matrix with the identity matrix and starts us a fresh because matrix transforms such as glOrpho and glRotate cumulate, basically puts us at (0, 0, 0)
+    glLoadIdentity(); 
+    // Essentially set coordinate system
+    glOrtho(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, 0, 1); 
+    // (default matrix mode) modelview matrix defines how your objects are transformed (meaning translation, rotation and scaling) in your world
+    glMatrixMode(GL_MODELVIEW); 
+    // Same as above comment
+    glLoadIdentity(); 
 
     float height = 0.9 * SCREEN_HEIGHT;
 
-    float segment = SCREEN_HEIGHT / (deadLineProblem.job_num + 1);
+    float segment = SCREEN_HEIGHT / (deadLineProblem.jobNumber + 1);
     int position_index = 0;
     int vertex_num = 0;
 
@@ -220,22 +244,21 @@ int draw() {
     for (int i = 0; i < bestSolutionForNewGA.jobStartTimes.size(); i++) {
         JobList* curJob = new JobList(bestSolutionForNewGA.jobStartTimes[i], deadLineProblem.jobs[i].processTime, deadLineProblem.jobs[i].releaseTime, deadLineProblem.jobs[i].deadLine);
         bestJobList.push_back(*curJob);
-        //   cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
     }
 
+    // Sort jobs according to releasing time
     std::sort(bestJobList.begin(), bestJobList.end(),
         [](const JobList& a, const JobList& b)
         {
             return a.jobReleasingTime < b.jobReleasingTime;
-
         }
     );
 
-    GLfloat* lineVertices = new GLfloat[deadLineProblem.job_num * 6];
-    GLfloat* redLineVertices = new GLfloat[deadLineProblem.job_num * 6];
+    GLfloat* lineVertices = new GLfloat[deadLineProblem.jobNumber * 6];
+    GLfloat* redLineVertices = new GLfloat[deadLineProblem.jobNumber * 6];
     GLfloat* rulerVertices = new GLfloat[((int)ceil(newLongestDeadline) + 2) * 6];
 
-    for (int i = 0; i < deadLineProblem.job_num; i++) {
+    for (int i = 0; i < deadLineProblem.jobNumber; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;
         lineVertices[position_index + 1] = height;
         lineVertices[position_index + 2] = 0;
@@ -248,7 +271,7 @@ int draw() {
     position_index = 0;
     height = 0.9 * SCREEN_HEIGHT;
 
-    for (int i = 0; i < deadLineProblem.job_num; i++) {
+    for (int i = 0; i < deadLineProblem.jobNumber; i++) {
         redLineVertices[position_index] = bestJobList[i].startTime * 30;
         redLineVertices[position_index + 1] = height;
         redLineVertices[position_index + 2] = 0;
@@ -263,7 +286,6 @@ int draw() {
     height = 0.95 * SCREEN_HEIGHT;
     int interval = 0;
     
-    //printf("longestdeadline: %d\n", longestDeadline);
     for (int i = 0; i < ceil(newLongestDeadline)+1; i++) {
         rulerVertices[position_index] = (interval) * 30;
         rulerVertices[position_index + 1] = height;
@@ -291,12 +313,12 @@ int draw() {
     glEnableClientState(GL_VERTEX_ARRAY);
     glColor3f(1, 1, 1);
     glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
-    glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(newLongestDeadline))); //printf("%f\n", 2 * (3 + ceil(newLongestDeadline)));
+    glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(newLongestDeadline)));
     glVertexPointer(3, GL_FLOAT, 0, lineVertices);
-    glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);  //printf("%d\n", 2 * deadLineProblem.job_num);
+    glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.jobNumber);
     glColor3f(1, 0, 0);
     glVertexPointer(3, GL_FLOAT, 0, redLineVertices);
-    glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);
+    glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.jobNumber);
 
     glDisableClientState(GL_VERTEX_ARRAY);
 
@@ -317,40 +339,44 @@ int draw() {
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
-    glViewport(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT); // specifies the part of the window to which OpenGL will draw (in pixels), convert from normalised to pixels
-    glMatrixMode(GL_PROJECTION); // projection matrix defines the properties of the camera that views the objects in the world coordinate frame. Here you typically set the zoom factor, aspect ratio and the near and far clipping planes
-    glLoadIdentity(); // replace the current matrix with the identity matrix and starts us a fresh because matrix transforms such as glOrpho and glRotate cumulate, basically puts us at (0, 0, 0)
-    glOrtho(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, 0, 1); // essentially set coordinate system
-    glMatrixMode(GL_MODELVIEW); // (default matrix mode) modelview matrix defines how your objects are transformed (meaning translation, rotation and scaling) in your world
-    glLoadIdentity(); // same as above comment
+    // Specifies the part of the window to which OpenGL will draw (in pixels), convert from normalised to pixels
+    glViewport(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT); 
+    // Projection matrix defines the properties of the camera that views the objects in the world coordinate frame. Here you typically set the zoom factor, aspect ratio and the near and far clipping planes
+    glMatrixMode(GL_PROJECTION); 
+    // Replace the current matrix with the identity matrix and starts us a fresh because matrix transforms such as glOrpho and glRotate cumulate, basically puts us at (0, 0, 0)
+    glLoadIdentity();
+    // Essentially set coordinate system
+    glOrtho(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, 0, 1); 
+    // (default matrix mode) modelview matrix defines how your objects are transformed (meaning translation, rotation and scaling) in your world
+    glMatrixMode(GL_MODELVIEW); 
+    // Same as above comment
+    glLoadIdentity(); 
 
     height = 0.9 * SCREEN_HEIGHT;
 
-    segment = SCREEN_HEIGHT / (deadLineProblem.job_num + 1);
+    segment = SCREEN_HEIGHT / (deadLineProblem.jobNumber + 1);
     position_index = 0;
     vertex_num = 0;
 
     bestJobList.clear();
     for (int i = 0; i < bestSolutionForOriginGA.jobStartTimes.size(); i++) {
         JobList* curJob = new JobList(bestSolutionForOriginGA.jobStartTimes[i], deadLineProblem.jobs[i].processTime, deadLineProblem.jobs[i].releaseTime, deadLineProblem.jobs[i].deadLine);
-        //printf("%f\n", bestSolutionForOriginGA.jobStartTimes[i]);
         bestJobList.push_back(*curJob);
-        //   cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
     }
 
+    // Sort all jobs according to job releasing time
     std::sort(bestJobList.begin(), bestJobList.end(),
         [](const JobList& a, const JobList& b)
         {
             return a.jobReleasingTime < b.jobReleasingTime;
-
         }
     );
 
-    lineVertices = new GLfloat[deadLineProblem.job_num * 6];              
-    redLineVertices = new GLfloat[deadLineProblem.job_num * 6];           
+    lineVertices = new GLfloat[deadLineProblem.jobNumber * 6];              
+    redLineVertices = new GLfloat[deadLineProblem.jobNumber * 6];           
     rulerVertices = new GLfloat[(ceil(originalLongestDeadline) + 2) * 6]; 
 
-    for (int i = 0; i < deadLineProblem.job_num; i++) {
+    for (int i = 0; i < deadLineProblem.jobNumber; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;  
         lineVertices[position_index + 1] = height;                            
         lineVertices[position_index + 2] = 0;                                 
@@ -363,7 +389,7 @@ int draw() {
     position_index = 0;
     height = 0.9 * SCREEN_HEIGHT; 
 
-    for (int i = 0; i < deadLineProblem.job_num; i++) {
+    for (int i = 0; i < deadLineProblem.jobNumber; i++) {
         redLineVertices[position_index] = bestJobList[i].startTime * 30;
         redLineVertices[position_index + 1] = height;
         redLineVertices[position_index + 2] = 0;
@@ -411,10 +437,10 @@ int draw() {
         glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
         glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(originalLongestDeadline))); 
         glVertexPointer(3, GL_FLOAT, 0, lineVertices);                     
-        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);            
+        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.jobNumber);            
         glColor3f(1, 0, 0);                                                
         glVertexPointer(3, GL_FLOAT, 0, redLineVertices);                  
-        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.job_num);            
+        glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.jobNumber);            
 
         glDisableClientState(GL_VERTEX_ARRAY);
 
@@ -430,10 +456,10 @@ int draw() {
 
 }
 
-
-
+// The main function
 int main() {
-    for (int i = 0; i < 1; i++) {
+    int iteration = 1;
+    for (int i = 0; i < iteration; i++) {
         uint64_t time = timeSinceEpochMillisec();
         newGeneticAlgorithm(i);        
         originalGeneticAlgorithm(i);          

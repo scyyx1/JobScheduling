@@ -1,28 +1,35 @@
 #include "Population.h"
 #include <math.h>
 using namespace  std;
-const double EPS = 1e-6; // used to compare two double values
+// Used to compare two double values
+const double EPS = 1e-6; 
+
+// The method to initialize the unlimited job problem
 void Population::initDeadlinePop(Problem prob)
 {
     int i, j;
     
-    for (i = 0; i < prob.solution_num; i++)
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         Solution *tempSolution = new Solution();
         tempSolution->jobStartTimes.clear();
-        for (j = 0; j < prob.job_num; j++)
+        // For every job, initialize a random double number from releasing time to latest start time as the job start time
+        for (j = 0; j < prob.jobNumber; j++)
         {
             tempSolution->fitness = 0;
-            
+        
+            // Generate a random number in the given range
             double tempD = rand_double(prob.jobs[j].releaseTime, prob.jobs[j].latestStartTime);
             tempSolution->jobStartTimes.push_back(tempD);
-
         }
+
+        // Compute fitness for each solution
         tempSolution->deadlineComputeFitness(prob);
         solutions.push_back(*tempSolution);
     }
 }
 
+// Selection function used to update population and uses RWS
 void Population::newSelection(Population& currentPop, Problem prob)
 {
     double totalFitness = 0, cumFitness = 0;
@@ -31,25 +38,25 @@ void Population::newSelection(Population& currentPop, Problem prob)
     solutions.clear();
     int i, j;
 
-    //total fitness
-    for (i = 0; i < prob.solution_num; i++)
+    // Total fitness for all solutions in the population
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         totalFitness += currentPop.solutions[i].fitness;
     }
 
-    //slice of each individual
-    for (i = 0; i < prob.solution_num; i++)
+    // Slice of each individual
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         slice.push_back((currentPop.solutions[i].fitness) / totalFitness);
         cumSlice.push_back(slice[i] + cumFitness);
         cumFitness = cumSlice[i];
     }
 
-    // copy selected solutions into next population
-    for (i = 0; i < prob.solution_num; i++)
+    // Copy selected solutions into next population
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         float randnum = rand_01();
-        for (j = 0; j < prob.solution_num; j++)
+        for (j = 0; j < prob.solutionNumber; j++)
         {
             if ((randnum - cumSlice[j]) < EPS)
             {
@@ -61,6 +68,7 @@ void Population::newSelection(Population& currentPop, Problem prob)
     return;
 }
 
+// COmpute the objective function for unlimited job problem
 void Population::Solution::deadlineComputeFitness(Problem prob) {
 
     vector<GeneralJobBlock> generalBlocks;
@@ -69,9 +77,9 @@ void Population::Solution::deadlineComputeFitness(Problem prob) {
     for (int i = 0; i < jobStartTimes.size(); i++) {
         Jobs* curJob = new Jobs(jobStartTimes[i], prob.jobs[i].processTime);
         jobs.push_back(*curJob);
-     //   cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
     }
 
+    // Sort all jobs according to job start time and finish time
     std::sort(jobs.begin(), jobs.end(),
         [](const Jobs& a, const Jobs& b)
         {
@@ -79,6 +87,7 @@ void Population::Solution::deadlineComputeFitness(Problem prob) {
         }
     );
 
+    // Record all blocks
     GeneralJobBlock* firstBlock = new GeneralJobBlock(jobs[0].startTime, jobs[0].processTime + jobs[0].startTime);
     generalBlocks.push_back(*firstBlock);
     for (int i = 1; i < jobs.size(); i++) {
@@ -94,29 +103,32 @@ void Population::Solution::deadlineComputeFitness(Problem prob) {
         }
     }
 
+    // Update the fitness which is the sum of all block length
     for (int i = 0; i < generalBlocks.size(); i++) {
         fitness += (generalBlocks[i].blockEndTime - generalBlocks[i].blockStartTime);
     }
-
 }
 
+// New crossover function
 void Population::newCrossover(Problem& prob) {
 
-    for (int i = 0; i < prob.solution_num; i ++) {
+    for (int i = 0; i < prob.solutionNumber; i ++) {
+        // Use a random double to decide whether should crossover
         double needCrossover = rand_double(0, 1);
-        if (needCrossover > prob.crossover_rate + EPS) {
+        if (needCrossover > prob.crossoverRate + EPS) {
             continue;
         }
 
-        if (i == prob.solution_num - 1) {
-            for (int j = 0; j < prob.job_num; j++) {
+        // Change the job start time according to current time and the time in next solution
+        if (i == prob.solutionNumber - 1) {
+            for (int j = 0; j < prob.jobNumber; j++) {
                 double alpha = 0.5;
                 solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[0].jobStartTimes[j];
 
             }
         }
         else {
-            for (int j = 0; j < prob.job_num - 1; j++) {
+            for (int j = 0; j < prob.jobNumber - 1; j++) {
                 double alpha = 0.5;
                 solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[i+1].jobStartTimes[j];
             }
@@ -126,17 +138,18 @@ void Population::newCrossover(Problem& prob) {
     }
 }
 
+// New mutation function
 void Population::newMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation) {
 
-    for (int i = 0; i < prob.solution_num; i++) {
-        for (int j = 0; j < prob.job_num; j++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
+        for (int j = 0; j < prob.jobNumber; j++) {
             
             double needMutation = rand_double(0, 1);
-            if (needMutation > prob.mutation_rate + EPS) {
+            if (needMutation > prob.mutationRate + EPS) {
                 continue;
             }
-            //this->solutions[i].jobStartTimes[j] = rand_double(prob.jobs[j].releaseTime,prob.jobs[j].latestStartTime);
 
+            // Uses evolutionary mutation to generate the job start time
             double rd = rand_double(0, 1);
             double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 5));
             double lastStartTime = lastPopulation.solutions[i].jobStartTimes[j];
@@ -153,10 +166,12 @@ void Population::newMutation(Problem prob, int totalIteration, int currentIterat
     }
 }
 
+// New replacement function
 void Population::newReplacement(Population& nextPop, Population currentPop, Problem prob) {
     double parentFitness = 0;
     double childFitness = 0;
-    for (int i = 0; i < prob.solution_num; i++) {
+    // Compare children and parent and choose the better solution
+    for (int i = 0; i < prob.solutionNumber; i++) {
         parentFitness = currentPop.solutions[i].fitness;
         childFitness = nextPop.solutions[i].fitness;
         if (childFitness + EPS <= parentFitness) {
@@ -169,12 +184,14 @@ void Population::newReplacement(Population& nextPop, Population currentPop, Prob
     
 }
 
+// New local search
 void Population::newLocalSearch(Problem prob) {
     int count = 0;
     while (count < 100) {
-        for (int i = 0; i < prob.solution_num; i++) {
+        for (int i = 0; i < prob.solutionNumber; i++) {
             double bestFitness = solutions[i].fitness;
-            for (int j = 0; j < prob.job_num; j++) {
+            for (int j = 0; j < prob.jobNumber; j++) {
+                // Define the neighborhood
                 double upperBound;
                 double lowerBound;
                 double interval = prob.jobs[j].latestStartTime - prob.jobs[j].releaseTime;
@@ -191,6 +208,7 @@ void Population::newLocalSearch(Problem prob) {
                     upperBound = prob.jobs[j].latestStartTime;
                 }
 
+                // Choose the job start time from neighborhood
                 solutions[i].jobStartTimes[j] = rand_double(lowerBound, upperBound);
                 solutions[i].deadlineComputeFitness(prob);
                 double currentFitness = solutions[i].fitness;
@@ -208,18 +226,19 @@ void Population::newLocalSearch(Problem prob) {
     }
 }
 
+// Original selection function
 void Population::originalSelection(Population& currentPop, Problem prob) {
     solutions.clear();
     int tour_size = 5;
     vector<Population::Solution> temp;
     double bestfitness = 0;
     int index = 0;
-    for (int i = 0; i < prob.solution_num; i++)
+    for (int i = 0; i < prob.solutionNumber; i++)
     {
-
+        // Uses random solutioon to select
         for (int j = 0; j < tour_size; j++)
         {
-            int select = rand_int(0, prob.solution_num - 1);
+            int select = rand_int(0, prob.solutionNumber - 1);
             temp.push_back(currentPop.solutions[select]);
         }
         bestfitness = temp[0].fitness;
@@ -234,25 +253,25 @@ void Population::originalSelection(Population& currentPop, Problem prob) {
         solutions.push_back(temp[index]);
         temp.clear();
         index = 0;
-
     }
 }
 
+// Original crossover function
 void Population::originalCrossover(Problem& prob) {
-    for (int i = 0; i < prob.solution_num; i++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
 
         double alpha = rand_double(0, 1);
-
-        if (i == prob.solution_num - 1)
+        // Decide job start according to current job start time and next job start time
+        if (i == prob.solutionNumber - 1)
         {
-            for (int j = 0; j < prob.job_num; j++)
+            for (int j = 0; j < prob.jobNumber; j++)
             {
                 solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[0].jobStartTimes[j];
             }
         }
         else
         {
-            for (int j = 0; j < prob.job_num - 1; j++)
+            for (int j = 0; j < prob.jobNumber - 1; j++)
             {
                 solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[i + 1].jobStartTimes[j];
             }
@@ -262,10 +281,12 @@ void Population::originalCrossover(Problem& prob) {
     }
 }
 
+// Original mutation
 void Population::originalMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation) {
-    for (int i = 0; i < prob.solution_num; i++) {
-        for (int j = 0; j < prob.job_num; j++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
+        for (int j = 0; j < prob.jobNumber; j++) {
 
+            // Generate a random number in the available range
             double start_time = rand_double(prob.jobs[j].releaseTime, prob.jobs[j].latestStartTime);
             this->solutions[i].jobStartTimes[j] = start_time;
             this->solutions[i].deadlineComputeFitness(prob);
@@ -273,10 +294,12 @@ void Population::originalMutation(Problem prob, int totalIteration, int currentI
     }
 }
 
+// Original raplacement
 void Population::originalReplacement(Population& nextPop, Population currentPop, Problem prob) {
     double parentFitness = 0;
     double childFitness = 0;
-    for (int i = 0; i < prob.solution_num; i++) {
+    // Chooses better solution in children and parents
+    for (int i = 0; i < prob.solutionNumber; i++) {
         parentFitness = currentPop.solutions[i].fitness;
         childFitness = nextPop.solutions[i].fitness;
         if (childFitness + EPS <= parentFitness) {
@@ -288,19 +311,21 @@ void Population::originalReplacement(Population& nextPop, Population currentPop,
     }
 }
 
+// Initialize limited job problem
 void Population::initNonDeadlinePop(Problem prob)
 {
     int i, j;
 
-    for (i = 0; i < prob.solution_num; i++)
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         Solution* tempSolution = new Solution();
         tempSolution->turnAroundTime = 0;
         tempSolution->jobStartTimes.clear();
-        for (j = 0; j < prob.job_num; j++)
+        for (j = 0; j < prob.jobNumber; j++)
         {
             tempSolution->fitness = 0;
 
+            // Get job start time from job release time and deadline which is manually defined
             double tempD = rand_double(prob.jobs[j].releaseTime, prob.deadLine);
             tempSolution->jobStartTimes.push_back(tempD);
 
@@ -308,11 +333,14 @@ void Population::initNonDeadlinePop(Problem prob)
                 tempSolution->turnAroundTime = (tempD + prob.jobs[j].processTime);
             }
         }
+
+        // Compute fitness for all solutions
         tempSolution->deadlineComputeFitness(prob);
         solutions.push_back(*tempSolution);
     }
 }
 
+// Selection function for limited job problem using RWS
 void Population::nonDeadlineSelection(Population& currentPop, Problem prob)
 {
     double totalFitness = 0, cumFitness = 0;
@@ -321,25 +349,25 @@ void Population::nonDeadlineSelection(Population& currentPop, Problem prob)
     solutions.clear();
     int i, j;
 
-    //total fitness
-    for (i = 0; i < prob.solution_num; i++)
+    // Total fitness
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         totalFitness += currentPop.solutions[i].fitness;
     }
 
-    //slice of each individual
-    for (i = 0; i < prob.solution_num; i++)
+    // Slice of each individual
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         slice.push_back((currentPop.solutions[i].fitness) / totalFitness);
         cumSlice.push_back(slice[i] + cumFitness);
         cumFitness = cumSlice[i];
     }
 
-    // copy selected solutions into next population
-    for (i = 0; i < prob.solution_num; i++)
+    // Copy selected solutions into next population
+    for (i = 0; i < prob.solutionNumber; i++)
     {
         float randnum = rand_01();
-        for (j = 0; j < prob.solution_num; j++)
+        for (j = 0; j < prob.solutionNumber; j++)
         {
             if ((randnum - cumSlice[j]) < EPS)
             {
@@ -351,6 +379,7 @@ void Population::nonDeadlineSelection(Population& currentPop, Problem prob)
     return;
 }
 
+// Function to compute fitness for limited job problem
 void Population::Solution::nonDeadlineComputeFitness(Problem prob) {
 
     vector<GeneralJobBlock> generalBlocks;
@@ -359,9 +388,9 @@ void Population::Solution::nonDeadlineComputeFitness(Problem prob) {
     for (int i = 0; i < jobStartTimes.size(); i++) {
         Jobs* curJob = new Jobs(jobStartTimes[i], prob.jobs[i].processTime);
         jobs.push_back(*curJob);
-        //   cout << jobs[i].startTime << " " << jobs[i].processTime << endl;
     }
 
+    // Sort all jobs in accordance with job start time and finish time
     std::sort(jobs.begin(), jobs.end(),
         [](const Jobs& a, const Jobs& b)
         {
@@ -369,6 +398,7 @@ void Population::Solution::nonDeadlineComputeFitness(Problem prob) {
         }
     );
 
+    // Record all blocks
     GeneralJobBlock* firstBlock = new GeneralJobBlock(jobs[0].startTime, jobs[0].processTime + jobs[0].startTime);
     generalBlocks.push_back(*firstBlock);
     for (int i = 1; i < jobs.size(); i++) {
@@ -388,30 +418,28 @@ void Population::Solution::nonDeadlineComputeFitness(Problem prob) {
         fitness += (generalBlocks[i].blockEndTime - generalBlocks[i].blockStartTime);
     }
 
-    //cout << fitness << "after";
-
+    // Final fitness reflects both active time and turn around time 
     fitness = 0.7*fitness + 0.3*(turnAroundTime - prob.firstReleaseTime);
-
-    //cout << fitness << endl;
 }
 
+// Crossover function for limited job problem which is similar to new crossover funtion of unlimited job problem
 void Population::nonDeadlineCrossover(Problem& prob) {
 
-    for (int i = 0; i < prob.solution_num; i++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
         double needCrossover = rand_double(0, 1);
-        if (needCrossover > prob.crossover_rate + EPS) {
+        if (needCrossover > prob.crossoverRate + EPS) {
             continue;
         }
 
-        if (i == prob.solution_num - 1) {
-            for (int j = 0; j < prob.job_num; j++) {
+        if (i == prob.solutionNumber - 1) {
+            for (int j = 0; j < prob.jobNumber; j++) {
                 double alpha = 0.5;
                 solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[0].jobStartTimes[j];
 
             }
         }
         else {
-            for (int j = 0; j < prob.job_num - 1; j++) {
+            for (int j = 0; j < prob.jobNumber - 1; j++) {
                 double alpha = 0.5;
                 solutions[i].jobStartTimes[j] = (1 - alpha) * solutions[i].jobStartTimes[j] + alpha * solutions[i + 1].jobStartTimes[j];
             }
@@ -421,17 +449,18 @@ void Population::nonDeadlineCrossover(Problem& prob) {
     }
 }
 
+// Mutation function for limited job problem which is similar to new mutation funtion of unlimited job problem
 void Population::nonDeadlineMutation(Problem prob, int totalIteration, int currentIteration, Population lastPopulation) {
 
-    for (int i = 0; i < prob.solution_num; i++) {
-        for (int j = 0; j < prob.job_num; j++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
+        for (int j = 0; j < prob.jobNumber; j++) {
 
             double needMutation = rand_double(0, 1);
-            if (needMutation > prob.mutation_rate + EPS) {
+            if (needMutation > prob.mutationRate + EPS) {
                 continue;
             }
-            //this->solutions[i].jobStartTimes[j] = rand_double(prob.jobs[j].releaseTime,prob.jobs[j].latestStartTime);
-
+            
+            // Manually set the range to deadline
             double rd = rand_double(0, 1);
             double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 5));
             double lastStartTime = lastPopulation.solutions[i].jobStartTimes[j];
@@ -448,10 +477,11 @@ void Population::nonDeadlineMutation(Problem prob, int totalIteration, int curre
     }
 }
 
+// Replacement function for limited job problem which is similar to new replacement funtion of unlimited job problem
 void Population::nonDeadlineReplacement(Population& nextPop, Population currentPop, Problem prob) {
     double parentFitness = 0;
     double childFitness = 0;
-    for (int i = 0; i < prob.solution_num; i++) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
         parentFitness = currentPop.solutions[i].fitness;
         childFitness = nextPop.solutions[i].fitness;
         if (childFitness + EPS <= parentFitness) {
@@ -464,12 +494,13 @@ void Population::nonDeadlineReplacement(Population& nextPop, Population currentP
 
 }
 
+// Local search function for limited job problem which is similar to local search funtion of unlimited job problem
 void Population::nonDeadlineLocalSearch(Problem prob) {
     int count = 0;
     while (count < 100) {
-        for (int i = 0; i < prob.solution_num; i++) {
+        for (int i = 0; i < prob.solutionNumber; i++) {
             double bestFitness = solutions[i].fitness;
-            for (int j = 0; j < prob.job_num; j++) {
+            for (int j = 0; j < prob.jobNumber; j++) {
                 double upperBound;
                 double lowerBound;
                 double interval = prob.deadLine - prob.jobs[j].releaseTime;

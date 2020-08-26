@@ -2,6 +2,7 @@
 const double EPS = 1e-6;
 using namespace std;
 
+// Load the problem from file to problem class
 float Problem::loadDeadlineProb(string filename, Problem& prob)
 {
     GeneralJob tempJob;
@@ -10,6 +11,8 @@ float Problem::loadDeadlineProb(string filename, Problem& prob)
     string str1, str2, str3;
     prob.jobs.clear();
     float longestDeadline = 0;
+
+    // Read jobs line by line
     while (getline(in, line))
     {
         stringstream word(line);
@@ -27,10 +30,11 @@ float Problem::loadDeadlineProb(string filename, Problem& prob)
         prob.jobs.push_back(tempJob);
     }
     in.close();
-    prob.job_num = prob.jobs.size(); 
+    prob.jobNumber = prob.jobs.size(); 
     return longestDeadline;
 }
 
+// Load limited job problems from file
 float Problem::loadNonDeadlineProb(string filename, Problem& prob)
 {
     GeneralJob tempJob;
@@ -40,6 +44,8 @@ float Problem::loadNonDeadlineProb(string filename, Problem& prob)
     prob.jobs.clear();
     prob.deadLine = 0;
     prob.firstReleaseTime = -1;
+
+    // Read jobs line by line
     while (getline(in, line))
     {
         stringstream word(line);
@@ -60,7 +66,7 @@ float Problem::loadNonDeadlineProb(string filename, Problem& prob)
         }
     }
     in.close();
-    prob.job_num = prob.jobs.size();
+    prob.jobNumber = prob.jobs.size();
 
     return 0;
 }
