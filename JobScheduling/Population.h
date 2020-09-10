@@ -31,6 +31,8 @@ public:
             blockStartTime = sTime;
             blockEndTime = eTime;
         }
+        ~GeneralJobBlock() {
+        }
     };
 
     // Recording the start time and processing time of each jobs

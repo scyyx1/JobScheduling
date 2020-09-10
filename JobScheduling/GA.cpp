@@ -83,14 +83,14 @@ uint64_t timeSinceEpochMillisec() {
 // New genetic algorithm
 void newGeneticAlgorithm(int testIndex)
 {   
-    string filename("TestFile0.txt");
+    string filename("instances120.txt");
     newLongestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
     deadLineProblem.solutionNumber = 10;
     deadLineProblem.crossoverRate = 0.8;
     deadLineProblem.mutationRate = 0.2;
 
     Population currentPop;
-    int totalIteration = 10;
+    int totalIteration = 1000;
     int curIteration = 0;
     
     currentPop.initDeadlinePop(deadLineProblem);
@@ -462,12 +462,12 @@ int main() {
     for (int i = 0; i < iteration; i++) {
         uint64_t time = timeSinceEpochMillisec();
         newGeneticAlgorithm(i);        
-        originalGeneticAlgorithm(i);          
-        nonDeadlineGeneticAlgorithm(i);       
+       // originalGeneticAlgorithm(i);          
+       //nonDeadlineGeneticAlgorithm(i);       
         time = timeSinceEpochMillisec() - time;
         cout << " Time spent: " << time << " miliseconds" << endl;
     }
-    draw();
+   // draw();
     return 0;
 }
 

@@ -26,6 +26,7 @@ void Population::initDeadlinePop(Problem prob)
         // Compute fitness for each solution
         tempSolution->deadlineComputeFitness(prob);
         solutions.push_back(*tempSolution);
+        delete(tempSolution);
     }
 }
 
@@ -77,6 +78,7 @@ void Population::Solution::deadlineComputeFitness(Problem prob) {
     for (int i = 0; i < jobStartTimes.size(); i++) {
         Jobs* curJob = new Jobs(jobStartTimes[i], prob.jobs[i].processTime);
         jobs.push_back(*curJob);
+        delete(curJob);
     }
 
     // Sort all jobs according to job start time and finish time
@@ -90,10 +92,12 @@ void Population::Solution::deadlineComputeFitness(Problem prob) {
     // Record all blocks
     GeneralJobBlock* firstBlock = new GeneralJobBlock(jobs[0].startTime, jobs[0].processTime + jobs[0].startTime);
     generalBlocks.push_back(*firstBlock);
+    delete(firstBlock);
     for (int i = 1; i < jobs.size(); i++) {
         if (jobs[i].startTime > generalBlocks.back().blockEndTime) {
             GeneralJobBlock* block = new GeneralJobBlock(jobs[i].startTime, jobs[i].processTime + jobs[i].startTime);
             generalBlocks.push_back(*block);
+            delete(block);
         }
         else
         {
@@ -107,6 +111,11 @@ void Population::Solution::deadlineComputeFitness(Problem prob) {
     for (int i = 0; i < generalBlocks.size(); i++) {
         fitness += (generalBlocks[i].blockEndTime - generalBlocks[i].blockStartTime);
     }
+
+    jobs.clear();
+    vector <Jobs>().swap(jobs);
+    generalBlocks.clear();
+    vector <GeneralJobBlock>().swap(generalBlocks);
 }
 
 // New crossover function
@@ -337,6 +346,7 @@ void Population::initNonDeadlinePop(Problem prob)
         // Compute fitness for all solutions
         tempSolution->deadlineComputeFitness(prob);
         solutions.push_back(*tempSolution);
+        delete(tempSolution);
     }
 }
 
@@ -388,6 +398,7 @@ void Population::Solution::nonDeadlineComputeFitness(Problem prob) {
     for (int i = 0; i < jobStartTimes.size(); i++) {
         Jobs* curJob = new Jobs(jobStartTimes[i], prob.jobs[i].processTime);
         jobs.push_back(*curJob);
+        delete(curJob);
     }
 
     // Sort all jobs in accordance with job start time and finish time
@@ -401,10 +412,12 @@ void Population::Solution::nonDeadlineComputeFitness(Problem prob) {
     // Record all blocks
     GeneralJobBlock* firstBlock = new GeneralJobBlock(jobs[0].startTime, jobs[0].processTime + jobs[0].startTime);
     generalBlocks.push_back(*firstBlock);
+    delete(firstBlock);
     for (int i = 1; i < jobs.size(); i++) {
         if (jobs[i].startTime > generalBlocks.back().blockEndTime) {
             GeneralJobBlock* block = new GeneralJobBlock(jobs[i].startTime, jobs[i].processTime + jobs[i].startTime);
             generalBlocks.push_back(*block);
+            delete(block);
         }
         else
         {
