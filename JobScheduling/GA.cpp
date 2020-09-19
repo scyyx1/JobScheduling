@@ -36,7 +36,7 @@ double bestFitnessNonDeadline;
 Problem deadLineProblem;
 Problem nonDeadlineProblem;
 float originalLongestDeadline = 0;
-float newLongestDeadline = 0;
+float longestDeadline = 0;
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -81,24 +81,19 @@ uint64_t timeSinceEpochMillisec() {
 }
 
 // New genetic algorithm
-void newGeneticAlgorithm(int testIndex)
+void newGeneticAlgorithm(int testIndex, int totalIteration)
 {   
-    string filename("instances120.txt");
-    newLongestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
     deadLineProblem.solutionNumber = 10;
     deadLineProblem.crossoverRate = 0.8;
     deadLineProblem.mutationRate = 0.2;
 
     Population currentPop;
-    int totalIteration = 1000;
     int curIteration = 0;
     
     currentPop.initDeadlinePop(deadLineProblem);
     bestSolutionForNewGA = currentPop.solutions[0];
     bestFitnessNewGA = currentPop.solutions[0].fitness;
     updateBestSolutionForNewGA(currentPop, deadLineProblem);
-    // Local search
-    currentPop.newLocalSearch(deadLineProblem);
 
     while (curIteration < totalIteration) {
         Population nextPop;
@@ -110,11 +105,6 @@ void newGeneticAlgorithm(int testIndex)
         nextPop.newMutation(deadLineProblem, totalIteration, curIteration, currentPop);
         // Apply replacement function
         nextPop.newReplacement(nextPop, currentPop, deadLineProblem);
-        // Apply local search every 100 iteration
-        if (curIteration % 100 == 0) {
-           nextPop.newLocalSearch(deadLineProblem);
-        }
-        
         // Update counter and best solution
         currentPop = nextPop;
         updateBestSolutionForNewGA(currentPop, deadLineProblem);
@@ -125,15 +115,13 @@ void newGeneticAlgorithm(int testIndex)
 }
 
 // Original genetic algorithm
-void originalGeneticAlgorithm(int testIndex) {
-    string filename("TestFile0.txt");
-    originalLongestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem); 
+void originalGeneticAlgorithm(int testIndex, int totalIteration) {
+
     deadLineProblem.solutionNumber = 10;
     deadLineProblem.crossoverRate = 0.8;
     deadLineProblem.mutationRate = 0.2;
 
     Population currentPop;
-    int totalIteration = 10;
     int curIteration = 0;
 
     currentPop.initDeadlinePop(deadLineProblem);
@@ -161,6 +149,45 @@ void originalGeneticAlgorithm(int testIndex) {
     cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessOriginGA << endl;
 }
 
+void memeticAlgorithm(int testIndex,int totalIteration) {
+    deadLineProblem.solutionNumber = 10;
+    deadLineProblem.crossoverRate = 0.8;
+    deadLineProblem.mutationRate = 0.2;
+
+    Population currentPop;
+    int curIteration = 0;
+
+    currentPop.initDeadlinePop(deadLineProblem);
+    bestSolutionForNewGA = currentPop.solutions[0];
+    bestFitnessNewGA = currentPop.solutions[0].fitness;
+    updateBestSolutionForNewGA(currentPop, deadLineProblem);
+    // Local search
+    currentPop.newLocalSearch(deadLineProblem);
+
+    while (curIteration < totalIteration) {
+        Population nextPop;
+        // Select populaition
+        nextPop.newSelection(currentPop, deadLineProblem);
+        // Apply crossover
+        nextPop.newCrossover(deadLineProblem);
+        // Apply mutation
+        nextPop.newMutation(deadLineProblem, totalIteration, curIteration, currentPop);
+        // Apply replacement function
+        nextPop.newReplacement(nextPop, currentPop, deadLineProblem);
+        // Apply local search every 100 iteration
+        if (curIteration % 100 == 0) {
+            cout << "Local Search" << endl;
+            nextPop.newLocalSearch(deadLineProblem);
+        }
+
+        // Update counter and best solution
+        currentPop = nextPop;
+        updateBestSolutionForNewGA(currentPop, deadLineProblem);
+        curIteration++;
+    }
+
+    cout << "New Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessNewGA << endl;
+}
 // Genetic algorithm for limited job algorithm
 void nonDeadlineGeneticAlgorithm(int testIndex) {
 
@@ -256,7 +283,7 @@ int draw() {
 
     GLfloat* lineVertices = new GLfloat[deadLineProblem.jobNumber * 6];
     GLfloat* redLineVertices = new GLfloat[deadLineProblem.jobNumber * 6];
-    GLfloat* rulerVertices = new GLfloat[((int)ceil(newLongestDeadline) + 2) * 6];
+    GLfloat* rulerVertices = new GLfloat[((int)ceil(longestDeadline) + 2) * 6];
 
     for (int i = 0; i < deadLineProblem.jobNumber; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;
@@ -286,7 +313,7 @@ int draw() {
     height = 0.95 * SCREEN_HEIGHT;
     int interval = 0;
     
-    for (int i = 0; i < ceil(newLongestDeadline)+1; i++) {
+    for (int i = 0; i < ceil(longestDeadline)+1; i++) {
         rulerVertices[position_index] = (interval) * 30;
         rulerVertices[position_index + 1] = height;
         rulerVertices[position_index + 2] = 0;
@@ -299,7 +326,7 @@ int draw() {
     rulerVertices[position_index] = 0;
     rulerVertices[position_index + 1] = height;
     rulerVertices[position_index + 2] = 0;
-    rulerVertices[position_index + 3] = ceil(newLongestDeadline) * 30;
+    rulerVertices[position_index + 3] = ceil(longestDeadline) * 30;
     rulerVertices[position_index + 4] = height;
     rulerVertices[position_index + 5] = 0;
 
@@ -313,7 +340,7 @@ int draw() {
     glEnableClientState(GL_VERTEX_ARRAY);
     glColor3f(1, 1, 1);
     glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
-    glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(newLongestDeadline)));
+    glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(longestDeadline)));
     glVertexPointer(3, GL_FLOAT, 0, lineVertices);
     glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.jobNumber);
     glColor3f(1, 0, 0);
@@ -374,7 +401,7 @@ int draw() {
 
     lineVertices = new GLfloat[deadLineProblem.jobNumber * 6];              
     redLineVertices = new GLfloat[deadLineProblem.jobNumber * 6];           
-    rulerVertices = new GLfloat[(ceil(originalLongestDeadline) + 2) * 6]; 
+    rulerVertices = new GLfloat[(ceil(longestDeadline) + 2) * 6]; 
 
     for (int i = 0; i < deadLineProblem.jobNumber; i++) {
         lineVertices[position_index] = bestJobList[i].jobReleasingTime * 30;  
@@ -404,7 +431,7 @@ int draw() {
     height = 0.95 * SCREEN_HEIGHT;
     interval = 0;
 
-    for (int i = 0; i < ceil(originalLongestDeadline) + 1; i++) {
+    for (int i = 0; i < ceil(longestDeadline) + 1; i++) {
         rulerVertices[position_index] = (interval) * 30; 
         rulerVertices[position_index + 1] = height;
         rulerVertices[position_index + 2] = 0;
@@ -417,7 +444,7 @@ int draw() {
     rulerVertices[position_index] = 0;
     rulerVertices[position_index + 1] = height;
     rulerVertices[position_index + 2] = 0;
-    rulerVertices[position_index + 3] = ceil(originalLongestDeadline) * 30;
+    rulerVertices[position_index + 3] = ceil(longestDeadline) * 30;
     rulerVertices[position_index + 4] = height;
     rulerVertices[position_index + 5] = 0;
 
@@ -435,7 +462,7 @@ int draw() {
         glEnableClientState(GL_VERTEX_ARRAY);
         glColor3f(1, 1, 1);
         glVertexPointer(3, GL_FLOAT, 0, rulerVertices);
-        glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(originalLongestDeadline))); 
+        glDrawArrays(GL_LINES, 0, 2 * (3 + ceil(longestDeadline))); 
         glVertexPointer(3, GL_FLOAT, 0, lineVertices);                     
         glDrawArrays(GL_LINES, 0, 2 * deadLineProblem.jobNumber);            
         glColor3f(1, 0, 0);                                                
@@ -460,14 +487,27 @@ int draw() {
 int main() {
     int iteration = 1;
     for (int i = 0; i < iteration; i++) {
+        string filename("instances40.txt");
+        longestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
+        int totalIteration = 100;
+
         uint64_t time = timeSinceEpochMillisec();
-        newGeneticAlgorithm(i);        
-       // originalGeneticAlgorithm(i);          
+        
+        newGeneticAlgorithm(i, totalIteration);     
+        cout << " New Genetic Algorithm" << endl << "Time spent : " << timeSinceEpochMillisec() - time << " miliseconds" << endl;
+
+        time = timeSinceEpochMillisec();
+        originalGeneticAlgorithm(i, totalIteration);       
+        cout << " Original Genetic Algorithm" << endl << "Time spent : " << timeSinceEpochMillisec() - time << " miliseconds" << endl;
+
+        time = timeSinceEpochMillisec();
+        memeticAlgorithm(i, totalIteration);
+        
+        cout << " Memetic Algorithm" << endl <<  "Time spent : " <<  timeSinceEpochMillisec() - time  << " miliseconds" << endl;
        //nonDeadlineGeneticAlgorithm(i);       
-        time = timeSinceEpochMillisec() - time;
-        cout << " Time spent: " << time << " miliseconds" << endl;
+        
     }
-   // draw();
+    //draw();
     return 0;
 }
 
