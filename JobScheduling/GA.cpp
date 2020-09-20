@@ -489,7 +489,7 @@ int main() {
     for (int i = 0; i < iteration; i++) {
         string filename("instances40.txt");
         longestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
-        int totalIteration = 100;
+        int totalIteration = deadLineProblem.jobNumber * 4;
 
         uint64_t time = timeSinceEpochMillisec();
         
