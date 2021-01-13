@@ -157,10 +157,9 @@ void Population::newMutation(Problem prob, int totalIteration, int currentIterat
             if (needMutation > prob.mutationRate + EPS) {
                 continue;
             }
-
             // Uses evolutionary mutation to generate the job start time
             double rd = rand_double(0, 1);
-            double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 5));
+            double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 0));
             double lastStartTime = lastPopulation.solutions[i].jobStartTimes[j];
             if (0.5+EPS <= rd) {
                 double boundary = prob.jobs[j].latestStartTime - lastStartTime;
@@ -197,6 +196,7 @@ void Population::newReplacement(Population& nextPop, Population currentPop, Prob
 void Population::newLocalSearch(Problem prob) {
     int count = 0;
     while (count < 100) {
+        cout << count << endl;
         for (int i = 0; i < prob.solutionNumber; i++) {
             double bestFitness = solutions[i].fitness;
             for (int j = 0; j < prob.jobNumber; j++) {
@@ -269,6 +269,10 @@ void Population::originalSelection(Population& currentPop, Problem prob) {
 void Population::originalCrossover(Problem& prob) {
     for (int i = 0; i < prob.solutionNumber; i++) {
 
+        double needCrossover = rand_double(0, 1);
+        if (needCrossover > prob.crossoverRate + EPS) {
+            continue;
+        }
         double alpha = rand_double(0, 1);
         // Decide job start according to current job start time and next job start time
         if (i == prob.solutionNumber - 1)
@@ -295,6 +299,10 @@ void Population::originalMutation(Problem prob, int totalIteration, int currentI
     for (int i = 0; i < prob.solutionNumber; i++) {
         for (int j = 0; j < prob.jobNumber; j++) {
 
+            double needMutation = rand_double(0, 1);
+            if (needMutation > prob.mutationRate + EPS) {
+                continue;
+            }
             // Generate a random number in the available range
             double start_time = rand_double(prob.jobs[j].releaseTime, prob.jobs[j].latestStartTime);
             this->solutions[i].jobStartTimes[j] = start_time;
@@ -475,7 +483,7 @@ void Population::nonDeadlineMutation(Problem prob, int totalIteration, int curre
             
             // Manually set the range to deadline
             double rd = rand_double(0, 1);
-            double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 5));
+            double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 1));
             double lastStartTime = lastPopulation.solutions[i].jobStartTimes[j];
             if (0.5 + EPS <= rd) {
                 double boundary = prob.deadLine - lastStartTime;

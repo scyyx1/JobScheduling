@@ -29,9 +29,11 @@ public:
 
 Population::Solution bestSolutionForNewGA;
 Population::Solution bestSolutionForOriginGA;
+Population::Solution bestSolutionForMemetic;
 Population::Solution bestSolutionForNonDeadline;
 double bestFitnessNewGA;
 double bestFitnessOriginGA;
+double bestFitnessMemetic;
 double bestFitnessNonDeadline;
 Problem deadLineProblem;
 Problem nonDeadlineProblem;
@@ -63,6 +65,17 @@ void updateBestSolutionForOriginGA(Population pop, Problem prob) {
     }
 }
 
+// Updates the best solution and record it for new genetic algorithm
+void updateBestSolutionForMemetic(Population pop, Problem prob) {
+    for (int i = 0; i < prob.solutionNumber; i++) {
+        // Uses naive accept function which accepts better solutions only
+        if (pop.solutions[i].fitness < bestFitnessMemetic) {
+            bestSolutionForNewGA = pop.solutions[i];
+            bestFitnessMemetic = pop.solutions[i].fitness;
+        }
+    }
+}
+
 // Updates the best solution and record it for genetic algorithm of limited job problem
 void updateBestSolutionForNonDeadline(Population pop, Problem prob) {
     for (int i = 0; i < prob.solutionNumber; i++) {
@@ -84,8 +97,8 @@ uint64_t timeSinceEpochMillisec() {
 void newGeneticAlgorithm(int testIndex, int totalIteration)
 {   
     deadLineProblem.solutionNumber = 10;
-    deadLineProblem.crossoverRate = 0.8;
-    deadLineProblem.mutationRate = 0.2;
+    deadLineProblem.crossoverRate = 0.5;
+    deadLineProblem.mutationRate = 0.02;
 
     Population currentPop;
     int curIteration = 0;
@@ -96,6 +109,7 @@ void newGeneticAlgorithm(int testIndex, int totalIteration)
     updateBestSolutionForNewGA(currentPop, deadLineProblem);
 
     while (curIteration < totalIteration) {
+        cout << curIteration << endl;
         Population nextPop;
         // Select populaition
         nextPop.newSelection(currentPop, deadLineProblem);
@@ -118,8 +132,8 @@ void newGeneticAlgorithm(int testIndex, int totalIteration)
 void originalGeneticAlgorithm(int testIndex, int totalIteration) {
 
     deadLineProblem.solutionNumber = 10;
-    deadLineProblem.crossoverRate = 0.8;
-    deadLineProblem.mutationRate = 0.2;
+    deadLineProblem.crossoverRate = 0.5;
+    deadLineProblem.mutationRate = 0.02;
 
     Population currentPop;
     int curIteration = 0;
@@ -130,6 +144,7 @@ void originalGeneticAlgorithm(int testIndex, int totalIteration) {
     updateBestSolutionForOriginGA(currentPop, deadLineProblem);
 
     while (curIteration < totalIteration) {
+        cout << curIteration << endl;
         Population nextPop;
         // Apply original selection
         nextPop.originalSelection(currentPop, deadLineProblem);
@@ -144,6 +159,7 @@ void originalGeneticAlgorithm(int testIndex, int totalIteration) {
         currentPop = nextPop;
         updateBestSolutionForOriginGA(currentPop, deadLineProblem);
         curIteration++; 
+
     }
 
     cout << "Original Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessOriginGA << endl;
@@ -151,19 +167,19 @@ void originalGeneticAlgorithm(int testIndex, int totalIteration) {
 
 void memeticAlgorithm(int testIndex,int totalIteration) {
     deadLineProblem.solutionNumber = 10;
-    deadLineProblem.crossoverRate = 0.8;
-    deadLineProblem.mutationRate = 0.2;
+    deadLineProblem.crossoverRate = 0.5;
+    deadLineProblem.mutationRate = 0.02;
 
     Population currentPop;
     int curIteration = 0;
 
     currentPop.initDeadlinePop(deadLineProblem);
     bestSolutionForNewGA = currentPop.solutions[0];
-    bestFitnessNewGA = currentPop.solutions[0].fitness;
-    updateBestSolutionForNewGA(currentPop, deadLineProblem);
+    bestFitnessMemetic = currentPop.solutions[0].fitness;
+    updateBestSolutionForMemetic(currentPop, deadLineProblem);
     // Local search
     currentPop.newLocalSearch(deadLineProblem);
-
+    int numOfLocalSearch = 1;
     while (curIteration < totalIteration) {
         Population nextPop;
         // Select populaition
@@ -176,17 +192,18 @@ void memeticAlgorithm(int testIndex,int totalIteration) {
         nextPop.newReplacement(nextPop, currentPop, deadLineProblem);
         // Apply local search every 100 iteration
         if (curIteration % 100 == 0) {
-            cout << "Local Search" << endl;
+            cout << "Local Search" << numOfLocalSearch << endl;
             nextPop.newLocalSearch(deadLineProblem);
+            numOfLocalSearch++;
         }
 
         // Update counter and best solution
         currentPop = nextPop;
-        updateBestSolutionForNewGA(currentPop, deadLineProblem);
+        updateBestSolutionForMemetic(currentPop, deadLineProblem);
         curIteration++;
     }
 
-    cout << "New Genetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessNewGA << endl;
+    cout << "Memetic Algorithm: TestID:" << testIndex << endl << " BestFitness: " << bestFitnessMemetic << endl;
 }
 // Genetic algorithm for limited job algorithm
 void nonDeadlineGeneticAlgorithm(int testIndex) {
@@ -485,28 +502,51 @@ int draw() {
 
 // The main function
 int main() {
-    int iteration = 1;
+    int iteration = 5;
+    uint64_t totalMemeticTime = 0;;
+    uint64_t totalOriginTime = 0;
+    uint64_t totalNewTime = 0;
+    double totalMemeticFitness = 0;
+    double totalOriginFitness = 0;
+    double totalNewFitness = 0;
     for (int i = 0; i < iteration; i++) {
-        string filename("instances40.txt");
+        stringstream ss;
+        ss << i + 1;
+        string filename = "dataset/instances160_" + ss.str()+ ".txt";
+        //string filename = "dataset/instances120_5.txt";
         longestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
         int totalIteration = deadLineProblem.jobNumber * 4;
 
-        uint64_t time = timeSinceEpochMillisec();
-        
-        newGeneticAlgorithm(i, totalIteration);     
-        cout << " New Genetic Algorithm" << endl << "Time spent : " << timeSinceEpochMillisec() - time << " miliseconds" << endl;
+        uint64_t curTime = timeSinceEpochMillisec();
+        cout << "start" << endl;
+  
+        /*memeticAlgorithm(i, 100);
+        uint64_t runTime = timeSinceEpochMillisec() - curTime;
+        cout << " Memetic Algorithm" << endl <<  "Time spent : " <<  runTime  << " miliseconds" << endl;
+        totalMemeticFitness += bestFitnessMemetic;
+        totalMemeticTime += runTime;*/
 
-        time = timeSinceEpochMillisec();
-        originalGeneticAlgorithm(i, totalIteration);       
-        cout << " Original Genetic Algorithm" << endl << "Time spent : " << timeSinceEpochMillisec() - time << " miliseconds" << endl;
+        curTime = timeSinceEpochMillisec();
+        originalGeneticAlgorithm(i, 1200);
+        uint64_t runTime = timeSinceEpochMillisec() - curTime;
+        cout << " Original Genetic Algorithm" << endl << "Time spent : " << runTime << " miliseconds" << endl;
+        totalOriginFitness += bestFitnessOriginGA;
+        totalOriginTime += runTime;
 
-        time = timeSinceEpochMillisec();
-        memeticAlgorithm(i, totalIteration);
-        
-        cout << " Memetic Algorithm" << endl <<  "Time spent : " <<  timeSinceEpochMillisec() - time  << " miliseconds" << endl;
+        curTime = timeSinceEpochMillisec();
+        newGeneticAlgorithm(i, 1200);
+        runTime = timeSinceEpochMillisec() - curTime;
+        cout << " New Genetic Algorithm" << endl << "Time spent : " << runTime << " miliseconds" << endl;
+        totalNewFitness += bestFitnessNewGA;
+        totalNewTime += runTime;
+
+
        //nonDeadlineGeneticAlgorithm(i);       
         
     }
+    cout << " Memetic Algorithm avg: " << endl << "Fitness: " << totalMemeticFitness / iteration << " Time spent : " << totalMemeticTime / iteration << " miliseconds" << endl;
+    cout << " Origin Algorithm avg: " << endl << "Fitness: " << totalOriginFitness / iteration << " Time spent : " << totalOriginTime / iteration << " miliseconds" << endl;
+    cout << " New Algorithm avg: " << endl << "Fitness: " << totalNewFitness / iteration << " Time spent : " << totalNewTime / iteration << " miliseconds" << endl;
     //draw();
     return 0;
 }
