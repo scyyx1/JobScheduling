@@ -484,6 +484,8 @@ int main() {
 
         
     }
+    cout << endl;
+    cout << endl;
     cout << " Memetic Algorithm avg: " << endl << "Fitness: " << totalMemeticFitness / iteration << " Time spent : " << totalMemeticTime / iteration << " miliseconds" << endl;
     //cout << " Origin Algorithm avg: " << endl << "Fitness: " << totalOriginFitness / iteration << " Time spent : " << totalOriginTime / iteration << " miliseconds" << endl;
     cout << " New Algorithm avg: " << endl << "Fitness: " << totalNewFitness / iteration << " Time spent : " << totalNewTime / iteration << " miliseconds" << endl;
