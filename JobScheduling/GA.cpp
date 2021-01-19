@@ -454,7 +454,7 @@ int main() {
     for (int i = 0; i < iteration; i++) {
         stringstream ss;
         ss << i + 1;
-        string filename = "dataset/instances40_" + ss.str()+ ".txt";
+        string filename = "job_dataset/instances40_" + ss.str()+ ".txt";
         //string filename = "dataset/instances120_5.txt";
         longestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
         int totalIteration = deadLineProblem.jobNumber * 5;
