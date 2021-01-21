@@ -7,7 +7,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-
+const double EPS = 1e-6;
 
 using namespace std;
 
@@ -33,6 +33,7 @@ Population::Solution bestSolutionForMemetic;
 double bestFitnessNewGA;
 double bestFitnessOriginGA;
 double bestFitnessMemetic;
+double totalJobLength;
 Problem deadLineProblem;
 float originalLongestDeadline = 0;
 float longestDeadline = 0;
@@ -44,7 +45,7 @@ float longestDeadline = 0;
 void updateBestSolutionForNewGA(Population pop, Problem prob) {
     for (int i = 0; i < prob.solutionNumber; i++) {
         // Uses naive accept function which accepts better solutions only
-        if (pop.solutions[i].fitness < bestFitnessNewGA) {
+        if (pop.solutions[i].fitness - bestFitnessNewGA < EPS) {
             bestSolutionForNewGA = pop.solutions[i];
             bestFitnessNewGA = pop.solutions[i].fitness;
         }
@@ -55,7 +56,7 @@ void updateBestSolutionForNewGA(Population pop, Problem prob) {
 void updateBestSolutionForOriginGA(Population pop, Problem prob) {
     for (int i = 0; i < prob.solutionNumber; i++) {
         // Uses naive accept function which accepts better solutions only
-        if (pop.solutions[i].fitness < bestFitnessOriginGA) {
+        if (pop.solutions[i].fitness - bestFitnessOriginGA < EPS) {
             bestSolutionForOriginGA = pop.solutions[i];
             bestFitnessOriginGA = pop.solutions[i].fitness;
         }
@@ -66,7 +67,7 @@ void updateBestSolutionForOriginGA(Population pop, Problem prob) {
 void updateBestSolutionForMemetic(Population pop, Problem prob) {
     for (int i = 0; i < prob.solutionNumber; i++) {
         // Uses naive accept function which accepts better solutions only
-        if (pop.solutions[i].fitness < bestFitnessMemetic) {
+        if (pop.solutions[i].fitness - bestFitnessMemetic < EPS) {
             bestSolutionForNewGA = pop.solutions[i];
             bestFitnessMemetic = pop.solutions[i].fitness;
         }
@@ -454,7 +455,7 @@ int main() {
     for (int i = 0; i < iteration; i++) {
         stringstream ss;
         ss << i + 1;
-        string filename = "job_dataset/instances40_" + ss.str()+ ".txt";
+        string filename = "job_dataset/instances10_1.txt";
         //string filename = "dataset/instances120_5.txt";
         longestDeadline = deadLineProblem.loadDeadlineProb(filename, deadLineProblem);
         int totalIteration = deadLineProblem.jobNumber * 5;

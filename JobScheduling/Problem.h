@@ -39,10 +39,11 @@ public:
     double deadLine;
     double mutationRate;
     double crossoverRate;
+	double totalJobLength;
     // Vector of jobs
     vector<Problem::GeneralJob> jobs;
     // The method to load unlimited job problem
-    float loadDeadlineProb(string filename, Problem& prob);
+    double loadDeadlineProb(string filename, Problem& prob);
     // The method to load limited job problem
     float loadNonDeadlineProb(string filename, Problem& prob);
 };

@@ -38,20 +38,21 @@ void Population::newSelection(Population& currentPop, Problem prob)
     vector<double> cumSlice;
     solutions.clear();
     int i, j;
-
+	
     // Total fitness for all solutions in the population
     for (i = 0; i < prob.solutionNumber; i++)
     {
-        totalFitness += currentPop.solutions[i].fitness;
+        totalFitness += prob.totalJobLength - currentPop.solutions[i].fitness;
     }
 
     // Slice of each individual
     for (i = 0; i < prob.solutionNumber; i++)
     {
-        slice.push_back((currentPop.solutions[i].fitness) / totalFitness);
+        slice.push_back((prob.totalJobLength - currentPop.solutions[i].fitness) / totalFitness);
         cumSlice.push_back(slice[i] + cumFitness);
         cumFitness = cumSlice[i];
     }
+
 
     // Copy selected solutions into next population
     for (i = 0; i < prob.solutionNumber; i++)
@@ -94,14 +95,14 @@ void Population::Solution::deadlineComputeFitness(Problem prob) {
     generalBlocks.push_back(*firstBlock);
     delete(firstBlock);
     for (int i = 1; i < jobs.size(); i++) {
-        if (jobs[i].startTime > generalBlocks.back().blockEndTime) {
+		if (jobs[i].startTime - generalBlocks.back().blockEndTime> EPS) {
             GeneralJobBlock* block = new GeneralJobBlock(jobs[i].startTime, jobs[i].processTime + jobs[i].startTime);
             generalBlocks.push_back(*block);
             delete(block);
         }
         else
         {
-            if ((jobs[i].startTime + jobs[i].processTime) > generalBlocks.back().blockEndTime) {
+			if ((jobs[i].startTime + jobs[i].processTime) - generalBlocks.back().blockEndTime > EPS) {
                 generalBlocks.back().blockEndTime = jobs[i].startTime + jobs[i].processTime;
             }
         }
@@ -124,7 +125,7 @@ void Population::newCrossover(Problem& prob) {
     for (int i = 0; i < prob.solutionNumber; i ++) {
         // Use a random double to decide whether should crossover
         double needCrossover = rand_double(0, 1);
-        if (needCrossover > prob.crossoverRate + EPS) {
+		if (needCrossover - prob.crossoverRate > EPS) {
             continue;
         }
 
@@ -154,14 +155,14 @@ void Population::newMutation(Problem prob, int totalIteration, int currentIterat
         for (int j = 0; j < prob.jobNumber; j++) {
             
             double needMutation = rand_double(0, 1);
-            if (needMutation > prob.mutationRate + EPS) {
+			if (needMutation - prob.mutationRate >  EPS) {
                 continue;
             }
             // Uses evolutionary mutation to generate the job start time
             double rd = rand_double(0, 1);
             double threshold = 1 - pow(rd, pow(1 - currentIteration / totalIteration, 0));
             double lastStartTime = lastPopulation.solutions[i].jobStartTimes[j];
-            if (0.5+EPS <= rd) {
+            if (EPS <= rd - 0.5) {
                 double boundary = prob.jobs[j].latestStartTime - lastStartTime;
                 this->solutions[i].jobStartTimes[j] = boundary * threshold + lastStartTime;
             }
@@ -182,7 +183,7 @@ void Population::newReplacement(Population& nextPop, Population currentPop, Prob
     for (int i = 0; i < prob.solutionNumber; i++) {
         parentFitness = currentPop.solutions[i].fitness;
         childFitness = nextPop.solutions[i].fitness;
-        if (childFitness + EPS <= parentFitness) {
+		if (parentFitness - childFitness >= EPS) {
             continue;
         }
         else {
@@ -208,11 +209,11 @@ void Population::newLocalSearch(Problem prob) {
                 double originJobStartTime = solutions[i].jobStartTimes[j];
                 upperBound = originJobStartTime + range;
                 lowerBound = originJobStartTime - range;
-                if (originJobStartTime - range + EPS < prob.jobs[j].releaseTime) {
+				if (originJobStartTime - range - prob.jobs[j].releaseTime < EPS) {
                     upperBound = prob.jobs[j].releaseTime + 2 * range;
                     lowerBound = prob.jobs[j].releaseTime;
                 }
-                else if (originJobStartTime + range > prob.jobs[j].latestStartTime + EPS) {
+				else if (originJobStartTime + range - prob.jobs[j].latestStartTime > EPS) {
                     lowerBound = prob.jobs[j].latestStartTime - 2 * range;
                     upperBound = prob.jobs[j].latestStartTime;
                 }
@@ -221,7 +222,7 @@ void Population::newLocalSearch(Problem prob) {
                 solutions[i].jobStartTimes[j] = rand_double(lowerBound, upperBound);
                 solutions[i].deadlineComputeFitness(prob);
                 double currentFitness = solutions[i].fitness;
-                if (currentFitness < bestFitness) {
+                if (bestFitness - currentFitness > EPS) {
                     bestFitness = currentFitness;
                     continue;
                 }

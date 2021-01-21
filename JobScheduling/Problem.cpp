@@ -3,14 +3,15 @@ const double EPS = 1e-6;
 using namespace std;
 
 // Load the problem from file to problem class
-float Problem::loadDeadlineProb(string filename, Problem& prob)
+double Problem::loadDeadlineProb(string filename, Problem& prob)
 {
     GeneralJob tempJob;
     ifstream in(filename);
     string line;
     string str1, str2, str3;
     prob.jobs.clear();
-    float longestDeadline = 0;
+	double jobFirstRelease = INT_MAX;
+    double longestDeadline = 0;
 
     // Read jobs line by line
     while (getline(in, line))
@@ -24,13 +25,17 @@ float Problem::loadDeadlineProb(string filename, Problem& prob)
         tempJob.deadLine = atof(str2.c_str());  
         tempJob.processTime = atof(str3.c_str());
         tempJob.latestStartTime = tempJob.deadLine - tempJob.processTime;
-        if (tempJob.deadLine > longestDeadline) {
+		if (tempJob.releaseTime - jobFirstRelease < EPS) {
+			jobFirstRelease = tempJob.releaseTime;
+		}
+		if (tempJob.deadLine - longestDeadline > EPS) {
             longestDeadline = tempJob.deadLine;
         }
         prob.jobs.push_back(tempJob);
     }
     in.close();
     prob.jobNumber = prob.jobs.size(); 
+	totalJobLength = longestDeadline - jobFirstRelease;
     return longestDeadline;
 }
 
